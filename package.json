@@ -1,0 +1,25 @@
+{
+  "name": "test-js-scripts",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "generate-image": "ts-node generateImage.ts",
+    "generate-text": "ts-node ai-worker.ts",
+    "test": "ts-node test-generate.ts",
+    "start": "node dist/generateImage.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "axios": "^1.11.0",
+    "dotenv": "^17.2.1"
+  }
+}
