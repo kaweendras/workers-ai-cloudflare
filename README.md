@@ -97,11 +97,22 @@ async function advancedExample() {
 ## File Structure
 
 ```
-├── generateImage.ts    # Main function
-├── test-generate.ts    # Example usage
-├── images/            # Generated images saved here
-├── .env.example       # Environment variables template
-└── package.json       # Dependencies and scripts
+├── package.json                    # Dependencies and scripts
+├── README.md                       # Project documentation
+├── tsconfig.json                   # TypeScript configuration
+├── images/                         # Generated images saved here
+│   ├── 2025-08-20T06-23-49-771Z_cyberpunk-cat.png
+│   ├── 2025-08-20T06-33-37-001Z_futuristic-cityscape-at-sunset.png
+│   ├── 2025-08-20T06-34-05-604Z_cyberpunk-cat.png
+│   ├── 2025-08-20T06-34-15-631Z_futuristic-cityscape-at-sunset.png
+│   └── 2025-08-20T06-46-34-874Z_Dark-jungle-in-the-moonlight-4k-ultra-realistic.png
+├── interfaces/                     # TypeScript interfaces
+│   └── ImageGenerationRequestInterface.ts
+├── samples/                        # Sample implementations
+│   ├── ai-worker.ts               # AI worker sample
+│   └── generateImage.ts           # Main image generation function
+└── tests/                         # Test files
+    └── test-generate.ts           # Test examples and usage
 ```
 
 ## Generated Images
