@@ -1,4 +1,4 @@
-import { generateImage } from "./generateImage";
+import { generateImage } from "../samples/generateImage";
 
 async function testImageGeneration() {
   try {
