@@ -100,12 +100,38 @@ async function advancedExample() {
 ├── package.json                    # Dependencies and scripts
 ├── README.md                       # Project documentation
 ├── tsconfig.json                   # TypeScript configuration
+├── Gradio-UI/                      # Python Gradio web interface
+│   ├── app.py                     # Main Gradio application
+│   ├── requirements.txt           # Python dependencies
+│   ├── start.sh                   # Setup and launch script
+│   ├── test_api.py               # API testing utilities
+│   └── README.md                 # Gradio UI documentation
 ├── images/                         # Generated images saved here
-├── interfaces/                     # TypeScript interfaces
+│   ├── 2025-08-20T06-23-49-771Z_cyberpunk-cat.png
+│   ├── 2025-08-20T06-33-37-001Z_futuristic-cityscape-at-sunset.png
+│   ├── 2025-08-20T06-34-05-604Z_cyberpunk-cat.png
+│   ├── 2025-08-20T06-34-15-631Z_futuristic-cityscape-at-sunset.png
+│   └── 2025-08-20T06-46-34-874Z_Dark-jungle-in-the-moonlight-4k-ultra-realistic.png
+├── src/                            # Source code
+│   ├── controllers/               # Request controllers
+│   │   └── generativeControllers.ts
+│   ├── interfaces/                # TypeScript interfaces
+│   │   ├── textToImageInterface.ts
+│   │   └── inpaintInterface.ts
+│   ├── routes/                    # API routes
+│   │   ├── generativeRoutes.ts
+│   │   └── userRoutes.ts
+│   ├── services/                  # Business logic services
+│   │   └── generativeServices/
+│   │       ├── textToImageService.ts
+│   │       └── inpaintService.ts
+│   ├── middleware/                # Express middleware
+│   └── index.ts                   # Main server file
+├── interfaces/                     # Legacy interfaces (to be moved)
 │   └── ImageGenerationRequestInterface.ts
 ├── samples/                        # Sample implementations
 │   ├── ai-worker.ts               # AI worker sample
-│   └── generateImage.ts           # Main image generation function
+│   └── generateImage.ts           # Legacy image generation function
 └── tests/                         # Test files
     └── test-generate.ts           # Test examples and usage
 ```
