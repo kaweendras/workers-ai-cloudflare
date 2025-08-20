@@ -3,6 +3,8 @@ import * as dotenv from "dotenv";
 import cors from "cors";
 import mongoose from "mongoose";
 import userRoutes from "./routes/userRoutes";
+import generativeRoutes from "./routes/generativeRoutes";
+const path = require("path");
 
 dotenv.config();
 
@@ -34,7 +36,9 @@ app.get("/", (req, res) => {
   res.send("Backend is running");
 });
 
+app.use("/images", express.static(path.join(process.cwd(), "images")));
 app.use("/api/v1", userRoutes);
+app.use("/api/v1", generativeRoutes);
 
 mongoose
   .connect(MONGODB_URI)
