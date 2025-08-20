@@ -5,7 +5,7 @@ import "dotenv/config";
 import {
   ImageGenerationRequest,
   ImageGenerationResponse,
-} from "./interfaces/ImageGenerationRequestInterface";
+} from "../interfaces/ImageGenerationRequestInterface";
 
 export async function generateImage(
   prompt: string,
@@ -72,7 +72,12 @@ export async function generateImage(
       .substring(0, 50); // Limit length
 
     const filename = `${timestamp}_${sanitizedPrompt}.png`;
-    const imagePath = path.join(__dirname, "images", filename);
+    // Ensure the images directory exists (root level)
+    const imagesDir = path.join(process.cwd(), "images");
+    if (!fs.existsSync(imagesDir)) {
+      fs.mkdirSync(imagesDir, { recursive: true });
+    }
+    const imagePath = path.join(imagesDir, filename);
 
     // Convert base64 to buffer and save
     const imageBuffer = Buffer.from(base64Image, "base64");
@@ -98,7 +103,10 @@ export async function generateImage(
 // usage of the function
 export async function generateImageExample(): Promise<void> {
   try {
-    const imagePath = await generateImage("futuristic cityscape at sunset", 8);
+    const imagePath = await generateImage(
+      "Dark jungle in the moonlight 4k ultra realistic",
+      8
+    );
     console.log("Generated image saved at:", imagePath);
   } catch (error) {
     console.error("Error generating image:", error);
