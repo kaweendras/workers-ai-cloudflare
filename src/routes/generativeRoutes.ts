@@ -5,8 +5,14 @@ import { authMiddleware } from "../middleware/authMiddleware";
 
 router.post(
   "/image/generate",
-  authMiddleware,
+  // authMiddleware,
   generativeControllers.textToImageController
+);
+
+router.post(
+  "/image/inpaint",
+  // authMiddleware,
+  generativeControllers.inpaintImageController
 );
 
 export default router;
