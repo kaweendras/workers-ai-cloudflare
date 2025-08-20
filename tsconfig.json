@@ -8,6 +8,6 @@
     "forceConsistentCasingInFileNames": true,
     "outDir": "dist"
   },
-  "include": ["*.ts", "interfaces/ImageGenerationRequestInterface.ts"],
+  "include": ["*.ts", "interfaces/ImageGenerationRequestInterface.ts", "samples/ai-worker.ts", "samples/generateImage.ts", "tests/test-generate.ts"],
   "exclude": ["node_modules", "dist"]
 }
