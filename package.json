@@ -8,7 +8,7 @@
     "generate-image": "ts-node samples/generateImage.ts",
     "generate-text": "ts-node samples/ai-worker.ts",
     "test": "ts-node tests/test-generate.ts",
-    "start": "node dist/samples/generateImage.js"
+    "start": "node dist/src/index.js"
   },
   "keywords": [],
   "author": "",
