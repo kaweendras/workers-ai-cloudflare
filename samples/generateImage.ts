@@ -104,7 +104,7 @@ export async function generateImage(
 export async function generateImageExample(): Promise<void> {
   try {
     const imagePath = await generateImage(
-      "Dark jungle in the moonlight 4k ultra realistic",
+      "Dark city at night from distance",
       8
     );
     console.log("Generated image saved at:", imagePath);
