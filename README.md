@@ -101,11 +101,6 @@ async function advancedExample() {
 ├── README.md                       # Project documentation
 ├── tsconfig.json                   # TypeScript configuration
 ├── images/                         # Generated images saved here
-│   ├── 2025-08-20T06-23-49-771Z_cyberpunk-cat.png
-│   ├── 2025-08-20T06-33-37-001Z_futuristic-cityscape-at-sunset.png
-│   ├── 2025-08-20T06-34-05-604Z_cyberpunk-cat.png
-│   ├── 2025-08-20T06-34-15-631Z_futuristic-cityscape-at-sunset.png
-│   └── 2025-08-20T06-46-34-874Z_Dark-jungle-in-the-moonlight-4k-ultra-realistic.png
 ├── interfaces/                     # TypeScript interfaces
 │   └── ImageGenerationRequestInterface.ts
 ├── samples/                        # Sample implementations
