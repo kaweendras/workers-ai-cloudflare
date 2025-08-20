@@ -1,0 +1,52 @@
+import express from "express";
+const router = express.Router();
+import * as userController from "../controllers/userControllers";
+import { authMiddleware } from "../middleware/authMiddleware";
+
+/**
+ * POST api/v1/users/login
+ * Login user
+ */
+router.post("/users/login", userController.loginUserController);
+
+/**
+ * POST api/v1/users/create
+ * Add a new user
+ */
+router.post(
+  "/users/create",
+  // authMiddleware,
+  userController.createUsersController
+);
+
+/**
+ * GET api/v1/users/getall
+ * Get all users
+ */
+router.get(
+  "/users/getall",
+  authMiddleware,
+  userController.getAllUsersController
+);
+
+/**
+ * GET api/v1/users/profile
+ * Get user profile
+ */
+router.get(
+  "/users/profile",
+  authMiddleware,
+  userController.getProfileController
+);
+
+/**
+ * GET api/v1/users/getUserByEmail
+ * Get user Email
+ */
+router.get(
+  "/users/getUserByEmail",
+  authMiddleware,
+  userController.getUserByEmailController
+);
+
+export default router;
