@@ -8,6 +8,7 @@
     "generate-image": "ts-node samples/generateImage.ts",
     "generate-text": "ts-node samples/ai-worker.ts",
     "test": "ts-node tests/test-generate.ts",
+    "test-inpaint": "ts-node tests/test-inpaint.ts",
     "start": "node dist/src/index.js"
   },
   "keywords": [],
