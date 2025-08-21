@@ -4,6 +4,7 @@ import base64
 from PIL import Image
 import io
 import os
+import numpy as np
 from typing import Optional, Tuple
 import json
 
@@ -77,8 +78,9 @@ class ImageGenerationUI:
             return None
 
     def inpaint_image(self, image: Optional[Image.Image], mask: Optional[Image.Image],
-                      prompt: str, steps: int, model: str) -> Optional[Image.Image]:
-        """Inpaint image with mask"""
+                      prompt: str, negative_prompt: str, steps: int, strength: float,
+                      guidance: float, width: int, height: int, seed: Optional[int], model: str) -> Optional[Image.Image]:
+        """Inpaint image with mask using the new schema"""
         if image is None:
             gr.Warning("Please upload an image")
             return None
@@ -94,25 +96,77 @@ class ImageGenerationUI:
         try:
             print(
                 f"Inpainting with prompt: '{prompt}', steps: {steps}, model: {model}")
+            print(
+                f"Parameters - negative_prompt: '{negative_prompt}', strength: {strength}, guidance: {guidance}")
+            print(
+                f"Dimensions - width: {width}, height: {height}, seed: {seed}")
+            print(f"Mask type: {type(mask)}")
+            if isinstance(mask, dict):
+                print(f"Mask keys: {mask.keys()}")
 
             # Convert images to base64
             img_buffer = io.BytesIO()
             image.save(img_buffer, format='PNG')
             img_b64 = base64.b64encode(img_buffer.getvalue()).decode()
 
-            mask_buffer = io.BytesIO()
-            mask.save(mask_buffer, format='PNG')
-            mask_b64 = base64.b64encode(mask_buffer.getvalue()).decode()
+            # Handle mask data - ImageEditor returns dict with 'background' and 'layers'
+            mask_image = None
+            if isinstance(mask, dict):
+                # If mask is a dict (from ImageEditor), extract the composite image
+                if 'composite' in mask and mask['composite'] is not None:
+                    mask_image = mask['composite']
+                elif 'layers' in mask and mask['layers']:
+                    # Get the first layer as mask
+                    mask_image = mask['layers'][0]
+                elif 'background' in mask and mask['background'] is not None:
+                    mask_image = mask['background']
+                else:
+                    raise ValueError(
+                        "No valid mask data found in ImageEditor output")
+            elif hasattr(mask, 'convert'):
+                # If mask is already a PIL Image
+                mask_image = mask
+            else:
+                raise ValueError(f"Unsupported mask type: {type(mask)}")
+
+            # Convert mask to numpy array and then to list of integers (0-255)
+            if mask_image is None:
+                raise ValueError("Could not extract mask image from editor")
+
+            # Convert mask to grayscale and resize to reduce payload size
+            # Resize to smaller dimensions to reduce array size
+            target_size = (64, 64)  # Much smaller to reduce payload
+            mask_resized = mask_image.convert('L').resize(target_size)
+            mask_array = np.array(mask_resized)
+            mask_list = mask_array.flatten().tolist()
+
+            print(f"Image b64 length: {len(img_b64)}")
+            print(
+                f"Mask array length: {len(mask_list)} (resized to {target_size})")
+
+            # Prepare request data according to new schema
+            request_data = {
+                "prompt": prompt,
+                "image_b64": img_b64,
+                "mask": mask_list,  # Use small array instead of base64
+                "num_steps": steps,
+                "strength": strength,
+                "guidance": guidance,
+                "width": width,
+                "height": height,
+                "model": model
+            }
+
+            # Add optional fields
+            if negative_prompt.strip():
+                request_data["negative_prompt"] = negative_prompt
+
+            if seed is not None:
+                request_data["seed"] = seed
 
             response = requests.post(
-                f"{self.api_base_url}/image/inpaint",
-                json={
-                    "image": img_b64,
-                    "mask": mask_b64,
-                    "prompt": prompt,
-                    "steps": steps,
-                    "model": model
-                },
+                f"{self.api_base_url}/generative/image/inpaint",
+                json=request_data,
                 timeout=120
             )
             response.raise_for_status()
@@ -166,6 +220,7 @@ def create_ui():
     ]
 
     inpaint_models = [
+        "@cf/runwayml/stable-diffusion-v1-5-inpainting",
         "@cf/runwayml/stable-diffusion-inpainting",
         "@cf/stabilityai/stable-diffusion-xl-inpainting-1.0"
     ]
@@ -189,7 +244,7 @@ def create_ui():
     }
     """
 
-    with gr.Blocks(title="AI Image Generator", theme=gr.themes.Soft(), css=css) as demo:
+    with gr.Blocks(title="AI Image Generator", css=css) as demo:
         gr.Markdown(
             """
             # 🎨 AI Image Generation Studio
@@ -271,14 +326,54 @@ def create_ui():
                         inp_prompt = gr.Textbox(
                             label="Inpainting Prompt",
                             placeholder="Describe what should appear in the masked (white) areas...",
-                            lines=4
+                            lines=3
                         )
 
-                        inp_steps = gr.Slider(
-                            minimum=1, maximum=8, value=4, step=1,
-                            label="Steps",
-                            info="Quality vs speed trade-off"
+                        inp_negative_prompt = gr.Textbox(
+                            label="Negative Prompt (Optional)",
+                            placeholder="What you don't want to see (e.g., blurry, low quality, artifacts)",
+                            lines=2
                         )
+
+                        with gr.Row():
+                            inp_steps = gr.Slider(
+                                minimum=1, maximum=20, value=10, step=1,
+                                label="Steps",
+                                info="Quality vs speed trade-off (max 20)"
+                            )
+
+                            inp_strength = gr.Slider(
+                                minimum=0.1, maximum=1.0, value=0.8, step=0.1,
+                                label="Strength",
+                                info="How much to transform (0.1-1.0)"
+                            )
+
+                        with gr.Row():
+                            inp_guidance = gr.Slider(
+                                minimum=1.0, maximum=15.0, value=7.5, step=0.5,
+                                label="Guidance",
+                                info="How closely to follow prompt"
+                            )
+
+                            inp_seed = gr.Number(
+                                label="Seed (Optional)",
+                                value=None,
+                                precision=0,
+                                info="For reproducible results"
+                            )
+
+                        with gr.Row():
+                            inp_width = gr.Slider(
+                                minimum=256, maximum=2048, value=512, step=64,
+                                label="Width",
+                                info="Output image width (256-2048)"
+                            )
+
+                            inp_height = gr.Slider(
+                                minimum=256, maximum=2048, value=512, step=64,
+                                label="Height",
+                                info="Output image height (256-2048)"
+                            )
 
                         inp_model = gr.Dropdown(
                             choices=inpaint_models,
@@ -309,8 +404,9 @@ def create_ui():
 
                 inp_generate_btn.click(
                     fn=ui.inpaint_image,
-                    inputs=[inp_image, inp_mask,
-                            inp_prompt, inp_steps, inp_model],
+                    inputs=[inp_image, inp_mask, inp_prompt, inp_negative_prompt,
+                            inp_steps, inp_strength, inp_guidance, inp_width,
+                            inp_height, inp_seed, inp_model],
                     outputs=inp_output,
                     show_progress="full"
                 )
