@@ -26,11 +26,11 @@ app.use(
   })
 );
 
-// Middleware to parse JSON bodies
-app.use(express.json());
+// Middleware to parse JSON bodies with increased size limit for images
+app.use(express.json({ limit: "10mb" }));
 
-// Middleware to parse URL-encoded bodies
-app.use(express.urlencoded({ extended: true }));
+// Middleware to parse URL-encoded bodies with increased size limit
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 app.get("/", (req, res) => {
   res.send("Backend is running");
