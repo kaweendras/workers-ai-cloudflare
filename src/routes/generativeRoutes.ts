@@ -10,7 +10,7 @@ router.post(
 );
 
 router.post(
-  "/image/inpaint",
+  "/generative/image/inpaint",
   // authMiddleware,
   generativeControllers.inpaintImageController
 );
