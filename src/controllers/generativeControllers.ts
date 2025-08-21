@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import * as generativeServices from "../services/generativeServices/textToImageService";
 import * as inpaintServices from "../services/generativeServices/inpaintService";
+import { InpaintImageRequest } from "../interfaces/inpaintInterface";
 
 import { verifyToken } from "../utils/authUtils";
 
@@ -37,24 +38,83 @@ const inpaintImageController = async (
   res: Response,
   next: NextFunction
 ) => {
-  const { image, mask, prompt, steps, model } = req.body;
-
   try {
-    // Validate required fields
-    if (!image || !mask || !prompt) {
+    const {
+      prompt,
+      negative_prompt,
+      height,
+      width,
+      image,
+      image_b64,
+      mask,
+      mask_b64,
+      num_steps,
+      strength,
+      guidance,
+      seed,
+      model,
+    } = req.body;
+
+    // Validate required fields according to the new schema
+    if (!prompt) {
       return res.status(400).json({
         success: "false",
-        message:
-          "Missing required fields: image, mask, and prompt are required",
+        message: "Missing required field: prompt is required",
         data: [],
       });
     }
 
-    const inpaintResponse = await inpaintServices.inpaintImage(
-      image,
-      mask,
+    // Validate field constraints
+    if (height && (height < 256 || height > 2048)) {
+      return res.status(400).json({
+        success: "false",
+        message: "Height must be between 256 and 2048 pixels",
+        data: [],
+      });
+    }
+
+    if (width && (width < 256 || width > 2048)) {
+      return res.status(400).json({
+        success: "false",
+        message: "Width must be between 256 and 2048 pixels",
+        data: [],
+      });
+    }
+
+    if (num_steps && num_steps > 20) {
+      return res.status(400).json({
+        success: "false",
+        message: "Number of steps cannot exceed 20",
+        data: [],
+      });
+    }
+
+    if (strength && (strength < 0 || strength > 1)) {
+      return res.status(400).json({
+        success: "false",
+        message: "Strength must be between 0 and 1",
+        data: [],
+      });
+    }
+
+    // Prepare the request data according to the new interface
+    const requestData: InpaintImageRequest = {
       prompt,
-      steps,
+      ...(negative_prompt && { negative_prompt }),
+      ...(height && { height }),
+      ...(width && { width }),
+      ...(image && { image }),
+      ...(image_b64 && { image_b64 }),
+      ...(mask && { mask }),
+      ...(mask_b64 && { mask_b64 }),
+      ...(num_steps && { num_steps }),
+      ...(strength && { strength }),
+      ...(guidance && { guidance }),
+      ...(seed && { seed }),
+    };
+
+    const inpaintResponse = await inpaintServices.inpaintImage(
+      requestData,
       model
     );
 
