@@ -5,10 +5,11 @@ A user-friendly web interface for generating images using AI models via the Clou
 ## Features
 
 - **Text-to-Image Generation**: Create images from text descriptions
-- **Inpainting**: Edit specific parts of existing images using masks
+- **Advanced Inpainting**: Edit specific parts of existing images using masks with full control
 - **Multiple Models**: Support for various AI models
 - **Real-time Preview**: Instant image generation and display
 - **Easy-to-use Interface**: Drag-and-drop functionality
+- **Advanced Controls**: Fine-tune generation with negative prompts, strength, guidance, dimensions, and seeds
 
 ## Setup
 
@@ -23,7 +24,7 @@ pip install -r requirements.txt
 Make sure your backend server is running on `http://localhost:4000` with the following endpoints:
 
 - `POST /api/v1/image/generate` - For text-to-image generation
-- `POST /api/v1/image/inpaint` - For image inpainting
+- `POST /api/v1/generative/image/inpaint` - For image inpainting (updated endpoint)
 
 ### 3. Run the Gradio Interface
 
@@ -42,13 +43,20 @@ The interface will be available at `http://localhost:7860`
 3. Select an AI model
 4. Click "Generate Image"
 
-### Inpainting
+### Inpainting (Updated with New Schema)
 
 1. Upload an image
 2. Draw a mask on areas you want to edit (white areas will be inpainted)
 3. Enter a prompt describing what should appear in the masked area
-4. Select an inpainting model
-5. Click "Inpaint"
+4. **NEW**: Optionally add a negative prompt to avoid unwanted elements
+5. **NEW**: Adjust advanced parameters:
+   - **Steps**: Number of diffusion steps (1-20, default 10)
+   - **Strength**: How much to transform the masked area (0.1-1.0, default 0.8)
+   - **Guidance**: How closely to follow the prompt (1.0-15.0, default 7.5)
+   - **Width/Height**: Output dimensions (256-2048, default 512x512)
+   - **Seed**: For reproducible results (optional)
+6. Select an inpainting model
+7. Click "Inpaint Image"
 
 ## Models Supported
 
@@ -60,8 +68,28 @@ The interface will be available at `http://localhost:7860`
 
 ### Inpainting Models
 
-- `@cf/runwayml/stable-diffusion-inpainting`
+- `@cf/runwayml/stable-diffusion-inpainting` (default)
+- `@cf/runwayml/stable-diffusion-v1-5-inpainting`
 - `@cf/stabilityai/stable-diffusion-xl-inpainting-1.0`
+
+## New Inpainting Schema
+
+The inpainting functionality now uses an updated schema with the following features:
+
+### Required Fields
+
+- `prompt`: Description of what to generate in masked areas
+
+### Optional Fields
+
+- `negative_prompt`: What to avoid in the generation
+- `height`, `width`: Output dimensions (256-2048 pixels)
+- `num_steps`: Diffusion steps (max 20)
+- `strength`: Transformation intensity (0-1)
+- `guidance`: Prompt adherence (higher = more faithful to prompt)
+- `seed`: For reproducible results
+- `image_b64`: Base64 encoded input image
+- `mask`: Array of mask pixel values (0-255)
 
 ## Environment Variables
 
@@ -71,3 +99,11 @@ The backend should have these environment variables configured:
 - `CLOUDFLARE_API_TOKEN`
 - `HOST`
 - `PORT`
+
+## Dependencies
+
+- **gradio**: Web interface framework
+- **requests**: HTTP client for API calls
+- **Pillow**: Image processing
+- **numpy**: Array operations for mask processing
+- **python-dotenv**: Environment variable management
