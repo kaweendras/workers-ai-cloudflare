@@ -36,6 +36,7 @@ app.get("/", (req, res) => {
   res.send("Backend is running");
 });
 
+// Configure static file serving - let Express handle content-type detection
 app.use("/images", express.static(path.join(process.cwd(), "images")));
 app.use("/api/v1", userRoutes);
 app.use("/api/v1", generativeRoutes);
