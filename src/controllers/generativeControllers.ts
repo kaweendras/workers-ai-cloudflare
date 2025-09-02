@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import * as generativeServices from "../services/generativeServices/textToImageService";
 import * as inpaintServices from "../services/generativeServices/inpaintService";
 import { InpaintImageRequest } from "../interfaces/inpaintInterface";
+import { nanaoBanana } from "../services/generativeServices/nanoBanana";
 
 import { verifyToken } from "../utils/authUtils";
 
@@ -134,4 +135,28 @@ const inpaintImageController = async (
   }
 };
 
-export { textToImageController, inpaintImageController };
+const nanaoBananaController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { prompt, imageURL } = req.body;
+  try {
+    const nanaoBananaResponse = await nanaoBanana(prompt, imageURL);
+    return res.status(200).json({
+      success: "true",
+      message: "Image processed successfully",
+      data: nanaoBananaResponse,
+    });
+  } catch (err: any) {
+    console.error("nanaoBanana error:", err);
+    return res.status(500).json({
+      success: "false",
+      message: "Failed to process image",
+      error: err.message,
+      data: [],
+    });
+  }
+};
+
+export { textToImageController, inpaintImageController, nanaoBananaController };
