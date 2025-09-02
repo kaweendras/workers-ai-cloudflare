@@ -13,9 +13,9 @@ module.exports = {
         },
         {
             name: "ts-frontend",
-            script: "npm run dev",
+            script: "npm",
+            args: ["run", "dev"],
             cwd: "./ts-front",
-            interpreter: "node",
             watch: false,
             autorestart: true,
             env: {
