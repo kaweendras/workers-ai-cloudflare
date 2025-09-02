@@ -209,9 +209,78 @@ const getAllImagesController = (req: Request, res: Response) => {
   }
 };
 
+const deleteImageController = (req: Request, res: Response) => {
+  const { filename } = req.params;
+  const imagesDir = path.join(process.cwd(), "images");
+
+  console.log(`DELETE request received for image: ${filename}`);
+  console.log(`Request params:`, req.params);
+  console.log(`Request path:`, req.path);
+
+  try {
+    // Check if directory exists
+    if (!fs.existsSync(imagesDir)) {
+      console.log(`Images directory not found at: ${imagesDir}`);
+      return res.status(404).json({
+        success: "false",
+        message: "Images directory not found",
+        data: [],
+      });
+    }
+
+    const imagePath = path.join(imagesDir, filename);
+    console.log(`Looking for image at path: ${imagePath}`);
+
+    // Check if file exists
+    if (!fs.existsSync(imagePath)) {
+      console.log(`Image not found at path: ${imagePath}`);
+      return res.status(404).json({
+        success: "false",
+        message: "Image not found",
+        data: [],
+      });
+    }
+
+    // Check if the file is actually an image
+    const isImage = [".png", ".jpg", ".jpeg", ".gif", ".webp"].some((ext) =>
+      filename.toLowerCase().endsWith(ext)
+    );
+
+    if (!isImage) {
+      console.log(`File is not an image: ${filename}`);
+      return res.status(400).json({
+        success: "false",
+        message: "File is not an image",
+        data: [],
+      });
+    }
+
+    // Delete the image
+    fs.unlinkSync(imagePath);
+    console.log(`Successfully deleted image at: ${imagePath}`);
+
+    return res.status(200).json({
+      success: "true",
+      message: "Image deleted successfully",
+      data: {
+        filename,
+      },
+    });
+  } catch (err: any) {
+    console.error("Error deleting image:", err);
+    return res.status(500).json({
+      success: "false",
+      message: "Failed to delete image",
+      error: err.message,
+      data: [],
+    });
+  }
+};
+
 export {
   textToImageController,
   inpaintImageController,
   nanaoBananaController,
   getAllImagesController,
+  deleteImageController,
 };
