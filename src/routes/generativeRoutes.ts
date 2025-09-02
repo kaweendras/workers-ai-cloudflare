@@ -23,4 +23,7 @@ router.post(
 
 router.get("/images", generativeControllers.getAllImagesController);
 
+// Make sure the route path matches the URL structure
+router.delete("/images/:filename", generativeControllers.deleteImageController);
+
 export default router;
