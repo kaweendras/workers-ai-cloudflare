@@ -21,4 +21,6 @@ router.post(
   generativeControllers.nanaoBananaController
 );
 
+router.get("/images", generativeControllers.getAllImagesController);
+
 export default router;
