@@ -15,4 +15,10 @@ router.post(
   generativeControllers.inpaintImageController
 );
 
+router.post(
+  "/generative/image/nanoBanana",
+  // authMiddleware,
+  generativeControllers.nanaoBananaController
+);
+
 export default router;
