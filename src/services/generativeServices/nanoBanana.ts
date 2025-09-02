@@ -1,0 +1,67 @@
+import { OpenAI } from "openai";
+import dotenv from "dotenv";
+import * as fs from "fs";
+import { ImageCompletionInterface } from "../../interfaces/ImageCompletionInterface";
+
+dotenv.config();
+
+const openai = new OpenAI({
+  baseURL: "https://openrouter.ai/api/v1",
+  apiKey: process.env.OPEN_ROUTER_API_KEY,
+  defaultHeaders: {
+    "HTTP-Referer": "<YOUR_SITE_URL>", // Optional. Site URL for rankings on openrouter.ai.
+    "X-Title": "<YOUR_SITE_NAME>", // Optional. Site title for rankings on openrouter.ai.
+  },
+});
+export async function nanaoBanana(prompt: string, imageURL: string) {
+  const completion = await openai.chat.completions.create({
+    model: "google/gemini-2.5-flash-image-preview:free",
+    messages: [
+      {
+        role: "user",
+        content: [
+          {
+            type: "text",
+            text: prompt,
+          },
+          {
+            type: "image_url",
+            image_url: {
+              url: imageURL,
+            },
+          },
+        ],
+      },
+    ],
+  });
+
+  // Extract base64 image from ImageCompletionInterface response
+  const imageCompletion: ImageCompletionInterface = completion as any;
+  const base64Image =
+    imageCompletion.choices?.[0]?.message?.images?.[0]?.image_url?.url?.split(
+      ","
+    )[1];
+
+  if (!base64Image) {
+    console.error("No image data found in ImageCompletionInterface response.");
+    throw new Error(
+      "No image data found in ImageCompletionInterface response."
+    );
+  }
+
+  // Generate a unique filename
+  const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+  const filename = `${timestamp}_nanoBanana.png`;
+  const imagesDir = `${process.cwd()}/images`;
+  if (!fs.existsSync(imagesDir)) {
+    fs.mkdirSync(imagesDir, { recursive: true });
+  }
+  const imagePath = `${imagesDir}/${filename}`;
+
+  // Convert base64 to buffer and save
+  const imageBuffer = Buffer.from(base64Image, "base64");
+  fs.writeFileSync(imagePath, imageBuffer);
+
+  console.log(`Image saved to: ${imagePath}`);
+  return imagePath;
+}
