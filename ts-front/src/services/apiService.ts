@@ -83,6 +83,17 @@ export const getAllImages = async (): Promise<string[]> => {
   }
 };
 
+// Delete an image by filename
+export const deleteImage = async (filename: string): Promise<boolean> => {
+  try {
+    const response = await api.delete(`/images/${filename}`);
+    return response.data.success === "true";
+  } catch (error) {
+    console.error("Error deleting image:", error);
+    return false;
+  }
+};
+
 // Upload image to ImgBB
 export const uploadToImgBB = async (
   imageFile: File
