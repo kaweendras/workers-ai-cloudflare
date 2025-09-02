@@ -55,9 +55,9 @@ export async function generateImage(
       }
     );
 
-    const base64Image = response.data.result?.image;
+    const http = response.data.result?.image;
 
-    if (!base64Image) {
+    if (!http) {
       console.error(
         "No image data received from API. Response:",
         JSON.stringify(response.data, null, 2)
@@ -81,7 +81,7 @@ export async function generateImage(
     const imagePath = path.join(imagesDir, filename);
 
     // Convert base64 to buffer and save
-    const imageBuffer = Buffer.from(base64Image, "base64");
+    const imageBuffer = Buffer.from(http, "base64");
     fs.writeFileSync(imagePath, imageBuffer);
 
     let relativePath = `http://${host}:${port}/images/${filename}`;
