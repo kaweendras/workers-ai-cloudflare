@@ -11,10 +11,21 @@ module.exports = {
                 NODE_ENV: "production"
             }
         },
+        // {
+        //     name: "ts-frontend",
+        //     script: "npm",
+        //     args: ["run", "dev", "--host"],
+        //     cwd: "./ts-front",
+        //     watch: false,
+        //     autorestart: true,
+        //     env: {
+        //         NODE_ENV: "production"
+        //     }
+        // },
         {
             name: "ts-frontend",
             script: "npm",
-            args: ["run", "dev"],
+            args: ["run", "dev", "--", "--port", "3001", "--host"],
             cwd: "./ts-front",
             watch: false,
             autorestart: true,
