@@ -5,6 +5,8 @@ import { ImageCompletionInterface } from "../../interfaces/ImageCompletionInterf
 
 dotenv.config();
 
+const host = process.env.HOST || "localhost";
+const port = process.env.PORT || 4000;
 const openai = new OpenAI({
   baseURL: "https://openrouter.ai/api/v1",
   apiKey: process.env.OPEN_ROUTER_API_KEY,
@@ -63,5 +65,11 @@ export async function nanaoBanana(prompt: string, imageURL: string) {
   fs.writeFileSync(imagePath, imageBuffer);
 
   console.log(`Image saved to: ${imagePath}`);
-  return imagePath;
+
+  let relativePath = `http://${host}:${port}/images/${filename}`;
+  //if host does not start with localhost
+  if (!host.startsWith("localhost")) {
+    relativePath = `https://${host}/images/${filename}`;
+  }
+  return { absolutePath: imagePath, relativePath };
 }
