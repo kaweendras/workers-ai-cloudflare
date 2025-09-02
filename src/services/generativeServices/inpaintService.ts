@@ -172,7 +172,7 @@ export async function inpaintImage(
 
     // Make the API call
     const response = await axios.post(
-      `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${model}`,
+      `http://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${model}`,
       payload,
       {
         headers: {
@@ -228,7 +228,7 @@ export async function inpaintImage(
     let relativePath = `http://${host}:${port}/images/${filename}`;
     // If host does not start with localhost, use HTTPS
     if (!host.startsWith("localhost")) {
-      relativePath = `https://${host}/images/${filename}`;
+      relativePath = `http://${host}/images/${filename}`;
     }
 
     console.log(
