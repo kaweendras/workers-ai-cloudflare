@@ -3,6 +3,8 @@ import * as generativeServices from "../services/generativeServices/textToImageS
 import * as inpaintServices from "../services/generativeServices/inpaintService";
 import { InpaintImageRequest } from "../interfaces/inpaintInterface";
 import { nanaoBanana } from "../services/generativeServices/nanoBanana";
+import * as path from "path";
+import * as fs from "fs";
 
 import { verifyToken } from "../utils/authUtils";
 
@@ -159,4 +161,57 @@ const nanaoBananaController = async (
   }
 };
 
-export { textToImageController, inpaintImageController, nanaoBananaController };
+const getAllImagesController = (req: Request, res: Response) => {
+  const imagesDir = path.join(process.cwd(), "images");
+  try {
+    // Check if directory exists
+    if (!fs.existsSync(imagesDir)) {
+      return res.status(404).json({
+        success: "false",
+        message: "Images directory not found",
+        data: [],
+      });
+    }
+
+    // Get all files with image extensions
+    const files = fs
+      .readdirSync(imagesDir)
+      .filter((file) =>
+        [".png", ".jpg", ".jpeg", ".gif", ".webp"].some((ext) =>
+          file.toLowerCase().endsWith(ext)
+        )
+      );
+
+    // Generate URLs for each image
+    const host = process.env.HOST || req.hostname || "localhost";
+    const port = process.env.PORT || 4000;
+    const imageUrls = files.map((file) => {
+      if (!host.startsWith("localhost")) {
+        return `https://${host}/images/${file}`;
+      }
+      return `http://${host}:${port}/images/${file}`;
+    });
+
+    return res.status(200).json({
+      success: "true",
+      message: "Images listed successfully",
+      count: imageUrls.length,
+      data: imageUrls,
+    });
+  } catch (err: any) {
+    console.error("Error listing images:", err);
+    return res.status(500).json({
+      success: "false",
+      message: "Failed to list images",
+      error: err.message,
+      data: [],
+    });
+  }
+};
+
+export {
+  textToImageController,
+  inpaintImageController,
+  nanaoBananaController,
+  getAllImagesController,
+};
