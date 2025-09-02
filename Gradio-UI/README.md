@@ -6,6 +6,8 @@ A user-friendly web interface for generating images using AI models via the Clou
 
 - **Text-to-Image Generation**: Create images from text descriptions
 - **Advanced Inpainting**: Edit specific parts of existing images using masks with full control
+- **nanoBanana Image Processing**: Process images with text prompts using the nanoBanana model
+- **Image Gallery**: View all generated images in one place
 - **Multiple Models**: Support for various AI models
 - **Real-time Preview**: Instant image generation and display
 - **Easy-to-use Interface**: Drag-and-drop functionality
@@ -21,10 +23,20 @@ pip install -r requirements.txt
 
 ### 2. Configure Environment
 
-Make sure your backend server is running on `http://localhost:4000` with the following endpoints:
+Create a `.env` file in the Gradio-UI directory with the following content:
+
+```
+IMGBB_API_KEY=your_imgbb_api_key_here
+```
+
+You can get an ImgBB API key by registering at [imgbb.com](https://imgbb.com/).
+
+Make sure your backend server is running on `http://localhost:4001` with the following endpoints:
 
 - `POST /api/v1/image/generate` - For text-to-image generation
-- `POST /api/v1/generative/image/inpaint` - For image inpainting (updated endpoint)
+- `POST /api/v1/generative/image/inpaint` - For image inpainting
+- `GET /api/v1/images` - For fetching all generated images
+- `POST /api/v1/generative/image/nanoBanana` - For nanoBanana image processing
 
 ### 3. Run the Gradio Interface
 
@@ -43,18 +55,37 @@ The interface will be available at `http://localhost:7860`
 3. Select an AI model
 4. Click "Generate Image"
 
-### Inpainting (Updated with New Schema)
+### Inpainting
 
 1. Upload an image
 2. Draw a mask on areas you want to edit (white areas will be inpainted)
 3. Enter a prompt describing what should appear in the masked area
-4. **NEW**: Optionally add a negative prompt to avoid unwanted elements
-5. **NEW**: Adjust advanced parameters:
-   - **Steps**: Number of diffusion steps (1-20, default 10)
-   - **Strength**: How much to transform the masked area (0.1-1.0, default 0.8)
-   - **Guidance**: How closely to follow the prompt (1.0-15.0, default 7.5)
-   - **Width/Height**: Output dimensions (256-2048, default 512x512)
-   - **Seed**: For reproducible results (optional)
+4. Adjust parameters as needed
+5. Click "Inpaint Image"
+
+### Image Gallery
+
+1. Navigate to the "Image Gallery" tab
+2. View all generated images
+3. Click "Refresh Gallery" to update the gallery with newly generated images
+
+### nanoBanana Image Processing
+
+1. Navigate to the "nanoBanana" tab
+2. Enter a prompt describing what you want to do with the image
+3. Either:
+   - Upload an image directly
+   - OR provide an image URL
+4. Click "Generate with nanoBanana"
+
+The uploaded images will be automatically sent to ImgBB for hosting before processing. 4. **NEW**: Optionally add a negative prompt to avoid unwanted elements 5. **NEW**: Adjust advanced parameters:
+
+- **Steps**: Number of diffusion steps (1-20, default 10)
+- **Strength**: How much to transform the masked area (0.1-1.0, default 0.8)
+- **Guidance**: How closely to follow the prompt (1.0-15.0, default 7.5)
+- **Width/Height**: Output dimensions (256-2048, default 512x512)
+- **Seed**: For reproducible results (optional)
+
 6. Select an inpainting model
 7. Click "Inpaint Image"
 

@@ -5,13 +5,18 @@ from PIL import Image
 import io
 import os
 import numpy as np
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List, Dict, Any
 import json
+from pathlib import Path
+from dotenv import load_dotenv
 
 
 class ImageGenerationUI:
     def __init__(self, api_base_url: str = "http://localhost:4001/api/v1"):
         self.api_base_url = api_base_url
+        # Load environment variables
+        load_dotenv()
+        self.imgbb_api_key = os.getenv("IMGBB_API_KEY")
 
     def text_to_image(self, prompt: str, steps: int, model: str) -> Optional[Image.Image]:
         """Generate image from text prompt"""
@@ -208,6 +213,149 @@ class ImageGenerationUI:
             print(f"Full error: {e}")
             return None
 
+    def get_all_images(self) -> List[str]:
+        """Fetch all images from the backend API"""
+        try:
+            response = requests.get(
+                f"{self.api_base_url}/images",
+                timeout=30
+            )
+            response.raise_for_status()
+
+            result = response.json()
+            print(f"API Response for images: {result}")
+
+            if result.get('success') == 'true' and 'data' in result:
+                return result['data']  # This should be a list of image URLs
+            else:
+                error_msg = result.get('error', 'Unknown error occurred')
+                gr.Warning(f"API Error: {error_msg}")
+                return []
+
+        except requests.exceptions.RequestException as e:
+            gr.Warning(f"Network error: {str(e)}")
+            return []
+        except Exception as e:
+            gr.Warning(f"Error fetching images: {str(e)}")
+            print(f"Full error: {e}")
+            return []
+
+    def upload_to_imgbb(self, image: Image.Image) -> Optional[str]:
+        """Upload an image to ImgBB and return the URL"""
+        if not self.imgbb_api_key:
+            gr.Warning("ImgBB API key is missing. Please check your .env file.")
+            return None
+
+        try:
+            # Convert image to base64
+            buffer = io.BytesIO()
+            image.save(buffer, format='PNG')
+            base64_image = base64.b64encode(buffer.getvalue()).decode('utf-8')
+
+            # Upload to ImgBB
+            url = f"https://api.imgbb.com/1/upload?expiration=600&key={self.imgbb_api_key}"
+            payload = {
+                'image': base64_image
+            }
+
+            response = requests.post(url, data=payload)
+            response.raise_for_status()
+
+            result = response.json()
+            print(f"ImgBB Response: {result}")
+
+            if result.get('success') and 'data' in result and 'url' in result['data']:
+                return result['data']['url']
+            else:
+                gr.Warning("Failed to upload image to ImgBB")
+                return None
+
+        except requests.exceptions.RequestException as e:
+            gr.Warning(f"ImgBB upload error: {str(e)}")
+            return None
+        except Exception as e:
+            gr.Warning(f"Error uploading to ImgBB: {str(e)}")
+            print(f"Full ImgBB error: {e}")
+            return None
+
+    def nano_banana(self, prompt: str, image_input: Optional[Image.Image], image_url: str) -> Optional[Image.Image]:
+        """Generate image using nanoBanana with either uploaded image or URL"""
+        if not prompt.strip():
+            gr.Warning("Please enter a prompt")
+            return None
+
+        # Determine image source
+        final_image_url = None
+
+        if image_input is not None:
+            # User uploaded an image, upload to ImgBB first
+            final_image_url = self.upload_to_imgbb(image_input)
+            if not final_image_url:
+                gr.Warning(
+                    "Failed to upload image. Please try again or use an image URL.")
+                return None
+        elif image_url.strip():
+            # User provided an image URL
+            final_image_url = image_url.strip()
+        else:
+            gr.Warning("Please either upload an image or provide an image URL")
+            return None
+
+        try:
+            print(
+                f"Generating nanoBanana with prompt: '{prompt}', imageURL: {final_image_url}")
+
+            response = requests.post(
+                f"{self.api_base_url}/generative/image/nanoBanana",
+                json={
+                    "prompt": prompt,
+                    "imageURL": final_image_url
+                },
+                timeout=120
+            )
+            response.raise_for_status()
+
+            result = response.json()
+            print(f"nanoBanana API Response: {result}")
+
+            # Handle the response based on API structure
+            if result.get('success') == 'true' and 'data' in result:
+                data = result['data']
+                if 'relativePath' in data:
+                    image_url = data['relativePath']
+                    print(f"Fetching image from: {image_url}")
+
+                    img_response = requests.get(image_url)
+                    img_response.raise_for_status()
+
+                    return Image.open(io.BytesIO(img_response.content))
+                elif 'absolutePath' in data:
+                    abs_path = data['absolutePath']
+                    if os.path.exists(abs_path):
+                        return Image.open(abs_path)
+                    else:
+                        gr.Warning(f"Image file not found at: {abs_path}")
+                        return None
+                else:
+                    gr.Warning("No image path found in API response")
+                    return None
+            else:
+                error_msg = result.get('error', 'Unknown error occurred')
+                gr.Warning(f"API Error: {error_msg}")
+                return None
+
+        except requests.exceptions.Timeout:
+            gr.Warning(
+                "Request timeout. The image generation is taking too long.")
+            return None
+        except requests.exceptions.RequestException as e:
+            gr.Warning(f"Network error: {str(e)}")
+            return None
+        except Exception as e:
+            gr.Warning(f"Error generating image: {str(e)}")
+            print(f"Full error: {e}")
+            return None
+
 
 def create_ui():
     ui = ImageGenerationUI()
@@ -253,6 +401,30 @@ def create_ui():
         )
 
         with gr.Tabs():
+            # Image Gallery Tab
+            with gr.TabItem("🖼️ Image Gallery"):
+                gallery_refresh_btn = gr.Button(
+                    "🔄 Refresh Gallery",
+                    variant="secondary"
+                )
+                gallery_output = gr.Gallery(
+                    label="Generated Images",
+                    show_label=True,
+                    elem_id="gallery_output",
+                    columns=3,
+                    object_fit="contain",
+                    height="auto"
+                )
+
+                # Load gallery on refresh button click
+                gallery_refresh_btn.click(
+                    fn=ui.get_all_images,
+                    inputs=[],
+                    outputs=gallery_output
+                )
+
+                # We'll set up a page load event at the end of the function
+
             # Text-to-Image Tab
             with gr.TabItem("✨ Text to Image"):
                 with gr.Row():
@@ -411,6 +583,79 @@ def create_ui():
                     show_progress="full"
                 )
 
+            # nanoBanana Tab
+            with gr.TabItem("🍌 nanoBanana"):
+                gr.Markdown(
+                    """
+                    # nanoBanana Image Generation
+                    Upload an image or provide an image URL, and add a prompt to generate a new image using nanoBanana.
+                    """
+                )
+
+                with gr.Row():
+                    with gr.Column(scale=1):
+                        nano_prompt = gr.Textbox(
+                            label="Prompt",
+                            placeholder="Describe what you want nanoBanana to do with the image...",
+                            lines=3
+                        )
+
+                        with gr.Tabs():
+                            with gr.TabItem("Upload Image"):
+                                nano_image_upload = gr.Image(
+                                    label="Upload Image",
+                                    type="pil",
+                                    sources=["upload", "clipboard"],
+                                    height=300
+                                )
+                                nano_url_placeholder = gr.Textbox(
+                                    label="",
+                                    visible=False,
+                                    value=""
+                                )
+
+                            with gr.TabItem("Image URL"):
+                                nano_url_input = gr.Textbox(
+                                    label="Image URL",
+                                    placeholder="Paste an image URL here...",
+                                    lines=1
+                                )
+                                nano_image_placeholder = gr.Image(
+                                    label="",
+                                    visible=False
+                                )
+
+                        nano_generate_btn = gr.Button(
+                            "🍌 Generate with nanoBanana",
+                            variant="primary",
+                            elem_classes=["generate-btn"]
+                        )
+
+                    with gr.Column(scale=2):
+                        nano_output = gr.Image(
+                            label="Generated Image",
+                            type="pil",
+                            interactive=False,
+                            height=500
+                        )
+
+                # Handle the Upload Image tab
+                upload_tab_btn = nano_generate_btn.click(
+                    fn=ui.nano_banana,
+                    inputs=[nano_prompt, nano_image_upload,
+                            nano_url_placeholder],
+                    outputs=nano_output,
+                    show_progress="full"
+                )
+
+                # Handle the Image URL tab
+                url_tab_btn = nano_generate_btn.click(
+                    fn=ui.nano_banana,
+                    inputs=[nano_prompt, nano_image_placeholder, nano_url_input],
+                    outputs=nano_output,
+                    show_progress="full"
+                )
+
         # Examples section
         with gr.Accordion("💡 Example Prompts", open=False):
             gr.Examples(
@@ -431,22 +676,36 @@ def create_ui():
             """
             ---
             **Note**: Make sure your backend server is running on `http://localhost:4001` 
-            with the required API endpoints for image generation.
+            with the required API endpoints:
+            - `/api/v1/image/generate` - Text-to-image generation
+            - `/api/v1/generative/image/inpaint` - Image inpainting
+            - `/api/v1/images` - View all generated images
+            - `/api/v1/generative/image/nanoBanana` - nanoBanana image processing
+            
+            For nanoBanana, make sure the IMGBB_API_KEY is set in your .env file.
             """
+        )
+
+        # Load gallery on page load (must be inside the gr.Blocks context)
+        demo.load(
+            fn=ui.get_all_images,
+            inputs=[],
+            outputs=gallery_output
         )
 
     return demo
 
 
 if __name__ == "__main__":
+    port = 7861  # Changed from 7860 to avoid port conflict
     print("🚀 Starting AI Image Generation Studio...")
-    print("📱 Interface will be available at: http://localhost:7860")
+    print(f"📱 Interface will be available at: http://localhost:{port}")
     print("🔧 Make sure your backend is running at: http://localhost:4001")
 
     demo = create_ui()
     demo.launch(
         server_name="0.0.0.0",
-        server_port=7860,
+        server_port=port,
         share=False,
         debug=True,
         show_error=True
