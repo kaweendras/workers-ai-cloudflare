@@ -13,7 +13,7 @@ export default defineConfig({
     },
     port: 3000,
     hmr: {
-      overlay: false
-    }
+      overlay: false,
+    },
   },
 });
