@@ -22,10 +22,10 @@ echo "📦 Installing Python dependencies..."
 pip3 install -r requirements.txt
 
 echo "🔧 Checking backend server..."
-if curl -f -s http://localhost:4000/ > /dev/null; then
-    echo "✅ Backend server is running at http://localhost:4000"
+if curl -f -s http://localhost:4001/ > /dev/null; then
+    echo "✅ Backend server is running at http://localhost:4001"
 else
-    echo "⚠️  Backend server is not responding at http://localhost:4000"
+    echo "⚠️  Backend server is not responding at http://localhost:4001"
     echo "   Please start your Node.js backend server first:"
     echo "   cd .. && npm run dev"
     echo ""
