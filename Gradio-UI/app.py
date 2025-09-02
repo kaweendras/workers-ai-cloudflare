@@ -10,7 +10,7 @@ import json
 
 
 class ImageGenerationUI:
-    def __init__(self, api_base_url: str = "http://localhost:4000/api/v1"):
+    def __init__(self, api_base_url: str = "http://localhost:4001/api/v1"):
         self.api_base_url = api_base_url
 
     def text_to_image(self, prompt: str, steps: int, model: str) -> Optional[Image.Image]:
@@ -430,7 +430,7 @@ def create_ui():
         gr.Markdown(
             """
             ---
-            **Note**: Make sure your backend server is running on `http://localhost:4000` 
+            **Note**: Make sure your backend server is running on `http://localhost:4001` 
             with the required API endpoints for image generation.
             """
         )
@@ -441,7 +441,7 @@ def create_ui():
 if __name__ == "__main__":
     print("🚀 Starting AI Image Generation Studio...")
     print("📱 Interface will be available at: http://localhost:7860")
-    print("🔧 Make sure your backend is running at: http://localhost:4000")
+    print("🔧 Make sure your backend is running at: http://localhost:4001")
 
     demo = create_ui()
     demo.launch(
