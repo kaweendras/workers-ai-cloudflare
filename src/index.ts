@@ -36,6 +36,17 @@ app.get("/", (req, res) => {
   res.send("Backend is running");
 });
 
+// Add a test route to debug the API path structure
+app.get("/api/v1/test", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "API is working correctly",
+    routes: {
+      delete_image: "/api/v1/images/:filename",
+    },
+  });
+});
+
 // Configure static file serving - let Express handle content-type detection
 app.use("/images", express.static(path.join(process.cwd(), "images")));
 app.use("/api/v1", userRoutes);
