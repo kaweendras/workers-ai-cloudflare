@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { getAllImages } from "../../services/apiService";
+import { getAllImages, deleteImage } from "../../services/apiService";
 import Button from "../common/Button";
 import { notify } from "../../utils/helpers";
-import { FiRefreshCw } from "react-icons/fi";
+import { FiRefreshCw, FiTrash2 } from "react-icons/fi";
 
 const Gallery: React.FC = () => {
   const [images, setImages] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
   const fetchImages = async () => {
     setIsLoading(true);
@@ -28,6 +29,33 @@ const Gallery: React.FC = () => {
 
   const handleImageClick = (image: string) => {
     setSelectedImage(image);
+  };
+
+  const handleDeleteImage = async (imageUrl: string) => {
+    // Extract the filename from the URL
+    const filename = imageUrl.split("/").pop();
+
+    if (!filename) {
+      notify.error("Could not determine the filename");
+      return;
+    }
+
+    setIsDeleting(filename);
+    try {
+      const success = await deleteImage(filename);
+      if (success) {
+        notify.success("Image deleted successfully");
+        // Refresh the gallery
+        fetchImages();
+      } else {
+        notify.error("Failed to delete image");
+      }
+    } catch (error) {
+      notify.error("An error occurred while deleting the image");
+      console.error("Error deleting image:", error);
+    } finally {
+      setIsDeleting(null);
+    }
   };
 
   return (
@@ -81,7 +109,7 @@ const Gallery: React.FC = () => {
           {images.map((image, index) => (
             <div
               key={index}
-              className="overflow-hidden rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300"
+              className="overflow-hidden rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 relative group"
             >
               <img
                 src={image}
@@ -89,6 +117,29 @@ const Gallery: React.FC = () => {
                 className="w-full h-64 object-cover cursor-pointer"
                 onClick={() => handleImageClick(image)}
               />
+              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (
+                      window.confirm(
+                        "Are you sure you want to delete this image?"
+                      )
+                    ) {
+                      handleDeleteImage(image);
+                    }
+                  }}
+                  disabled={isDeleting === image.split("/").pop()}
+                  className="bg-red-500 hover:bg-red-600 text-white rounded-full p-2 shadow-lg"
+                  title="Delete image"
+                >
+                  {isDeleting === image.split("/").pop() ? (
+                    <div className="w-5 h-5 animate-spin rounded-full border-b-2 border-white"></div>
+                  ) : (
+                    <FiTrash2 size={16} />
+                  )}
+                </button>
+              </div>
             </div>
           ))}
         </div>
