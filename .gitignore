@@ -3,3 +3,4 @@ node_modules/
 images/
 dist/
 Gradio-UI/.env
+tmp/
