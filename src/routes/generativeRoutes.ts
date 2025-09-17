@@ -10,6 +10,12 @@ router.post(
 );
 
 router.post(
+  "/generative/image/lucidOriginTTI",
+  // authMiddleware,
+  generativeControllers.lucidOriginTTIController
+);
+
+router.post(
   "/generative/image/inpaint",
   // authMiddleware,
   generativeControllers.inpaintImageController

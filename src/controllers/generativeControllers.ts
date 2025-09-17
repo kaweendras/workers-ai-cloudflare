@@ -3,6 +3,7 @@ import * as generativeServices from "../services/generativeServices/textToImageS
 import * as inpaintServices from "../services/generativeServices/inpaintService";
 import { InpaintImageRequest } from "../interfaces/inpaintInterface";
 import { nanaoBanana } from "../services/generativeServices/nanoBanana";
+import { lucidOriginTTI } from "../services/generativeServices/lucidOriginTTI";
 import * as path from "path";
 import * as fs from "fs";
 
@@ -24,6 +25,36 @@ const textToImageController = async (
       success: "true",
       message: "Image generated successfully",
       data: textToImageResponse,
+    });
+  } catch (err: any) {
+    console.error(err);
+    return res.status(500).json({
+      success: "false",
+      message: "Failed to generate image",
+      error: err.message,
+      data: [],
+    });
+  }
+};
+
+const lucidOriginTTIController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { prompt, steps, height, width, guidance } = req.body;
+  try {
+    const lucidOriginTTIResponse = await lucidOriginTTI({
+      prompt,
+      steps,
+      height,
+      width,
+      guidance,
+    });
+    return res.status(200).json({
+      success: "true",
+      message: "Image generated successfully",
+      data: lucidOriginTTIResponse,
     });
   } catch (err: any) {
     console.error(err);
@@ -283,4 +314,5 @@ export {
   nanaoBananaController,
   getAllImagesController,
   deleteImageController,
+  lucidOriginTTIController,
 };

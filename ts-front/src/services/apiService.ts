@@ -16,6 +16,32 @@ const api = axios.create({
   timeout: 120000, // 2 minutes
 });
 
+// Lucid Origin TTI image generation
+export const generateLucidOriginTTI = async (
+  params: any
+): Promise<{ image: string }> => {
+  try {
+    const response = await api.post("/generative/image/lucidOriginTTI", params);
+    const responseData = response.data;
+
+    // Check if the API returned success and extract the image path
+    if (responseData.success === "true" && responseData.data?.relativePath) {
+      // For now, return the relativePath as the image URL
+      // Note: This is different from base64 - the frontend will need to handle this as a URL
+      return { image: responseData.data.relativePath };
+    } else {
+      throw new Error(responseData.message || "Failed to generate image");
+    }
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(
+        `API Error: ${error.response?.data?.error || error.message}`
+      );
+    }
+    throw error;
+  }
+};
+
 // Text to image generation
 export const generateImage = async (
   params: ImageGenerationRequest

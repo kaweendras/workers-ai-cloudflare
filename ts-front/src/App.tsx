@@ -6,6 +6,7 @@ import TextToImage from "./components/TextToImage/TextToImage";
 import Inpainting from "./components/Inpainting/Inpainting";
 import NanoBanana from "./components/NanoBanana/NanoBanana";
 import Gallery from "./components/Gallery/Gallery";
+import LucidOriginTTITab from "./components/LucidOriginTTITab";
 
 function App() {
   const [activeTab, setActiveTab] = useState("🖼️ Image Gallery");
@@ -15,7 +16,10 @@ function App() {
     "✨ TTI FLUX",
     "🎭 Inpainting",
     "🍌 nanoBanana",
+    "🌄 Lucid Origin TTI",
   ];
+
+  // ...existing code...
 
   const renderContent = () => {
     switch (activeTab) {
@@ -27,6 +31,8 @@ function App() {
         return <Inpainting />;
       case "🍌 nanoBanana":
         return <NanoBanana />;
+      case "🌄 Lucid Origin TTI":
+        return <LucidOriginTTITab />;
       default:
         return <Gallery />;
     }
