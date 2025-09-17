@@ -12,7 +12,7 @@ function App() {
 
   const tabs = [
     "🖼️ Image Gallery",
-    "✨ Text to Image",
+    "✨ TTI FLUX",
     "🎭 Inpainting",
     "🍌 nanoBanana",
   ];
@@ -21,7 +21,7 @@ function App() {
     switch (activeTab) {
       case "🖼️ Image Gallery":
         return <Gallery />;
-      case "✨ Text to Image":
+      case "✨ TTI FLUX":
         return <TextToImage />;
       case "🎭 Inpainting":
         return <Inpainting />;
