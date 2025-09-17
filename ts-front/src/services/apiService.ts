@@ -93,6 +93,47 @@ export const processWithNanoBanana = async (
   }
 };
 
+// SDXL image generation
+interface SdxlRequest {
+  prompt: string;
+  negative_prompt?: string;
+  height?: number;
+  width?: number;
+  image?: number[];
+  image_b64?: string;
+  mask?: number[];
+  num_steps?: number;
+  strength?: number;
+  guidance?: number;
+  seed?: number;
+}
+
+interface SdxlResponse {
+  success: boolean;
+  data?: {
+    result: string;
+    filePath?: string;
+    fileName?: string;
+    meta?: {
+      duration?: number;
+      seed?: number;
+    };
+  };
+  error?: string;
+}
+
+export const sdxlAPI = async (
+  requestData: SdxlRequest
+): Promise<SdxlResponse> => {
+  try {
+    const response = await api.post('/generative/image/sdxl', requestData);
+    return response.data;
+  } catch (error: any) {
+    console.error('SDXL API Error:', error);
+    throw new Error(error.response?.data?.error || 'API request failed');
+  }
+};
+
 // Get all images
 export const getAllImages = async (): Promise<string[]> => {
   try {

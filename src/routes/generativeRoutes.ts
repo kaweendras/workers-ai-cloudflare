@@ -27,6 +27,12 @@ router.post(
   generativeControllers.nanaoBananaController
 );
 
+router.post(
+  "/generative/image/sdxl",
+  // authMiddleware,
+  generativeControllers.sdxlController
+);
+
 router.get("/images", generativeControllers.getAllImagesController);
 
 // Make sure the route path matches the URL structure

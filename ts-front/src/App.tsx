@@ -7,6 +7,7 @@ import Inpainting from "./components/Inpainting/Inpainting";
 import NanoBanana from "./components/NanoBanana/NanoBanana";
 import Gallery from "./components/Gallery/Gallery";
 import LucidOriginTTITab from "./components/LucidOriginTTITab";
+import SDXL from "./components/SDXL/SDXL";
 
 function App() {
   const [activeTab, setActiveTab] = useState("🖼️ Image Gallery");
@@ -17,6 +18,7 @@ function App() {
     "🎭 Inpainting",
     "🍌 nanoBanana",
     "🌄 Lucid Origin TTI",
+    "🚀 SDXL",
   ];
 
   // ...existing code...
@@ -33,6 +35,8 @@ function App() {
         return <NanoBanana />;
       case "🌄 Lucid Origin TTI":
         return <LucidOriginTTITab />;
+      case "🚀 SDXL":
+        return <SDXL />;
       default:
         return <Gallery />;
     }
@@ -65,7 +69,8 @@ function App() {
             with the required API endpoints: <code>/api/v1/image/generate</code>
             , <code>/api/v1/generative/image/inpaint</code>,
             <code>/api/v1/images</code>, and{" "}
-            <code>/api/v1/generative/image/nanoBanana</code>. For nanoBanana,
+            <code>/api/v1/generative/image/nanoBanana</code>, and{" "}
+            <code>/api/v1/generative/image/sdxl</code>. For nanoBanana,
             make sure the IMGBB_API_KEY is set in your .env file.
           </p>
         </div>

@@ -4,6 +4,8 @@ import * as inpaintServices from "../services/generativeServices/inpaintService"
 import { InpaintImageRequest } from "../interfaces/inpaintInterface";
 import { nanaoBanana } from "../services/generativeServices/nanoBanana";
 import { lucidOriginTTI } from "../services/generativeServices/lucidOriginTTI";
+import { sdxlService } from "../services/generativeServices/sdxlService";
+import { SdxlRequestInterface } from "../interfaces/sdxlInterface";
 import * as path from "path";
 import * as fs from "fs";
 
@@ -308,6 +310,30 @@ const deleteImageController = (req: Request, res: Response) => {
   }
 };
 
+const sdxlController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const requestData: SdxlRequestInterface = req.body;
+    
+    const result = await sdxlService(requestData);
+    
+    if (result.success) {
+      res.status(200).json(result);
+    } else {
+      res.status(400).json(result);
+    }
+  } catch (error: any) {
+    console.error('SDXL Controller Error:', error.message);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+};
+
 export {
   textToImageController,
   inpaintImageController,
@@ -315,4 +341,5 @@ export {
   getAllImagesController,
   deleteImageController,
   lucidOriginTTIController,
+  sdxlController,
 };
