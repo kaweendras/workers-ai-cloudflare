@@ -50,8 +50,9 @@ export default function LucidOriginTTITab() {
     setError(null);
     setImage(null);
     try {
-      const data = await generateLucidOriginTTI(params);
-      setImage(data.image);
+      const response = await generateLucidOriginTTI(params);
+      console.log('API Response:', response); // Debug log
+      setImage(response.data.url);
     } catch (err: any) {
       setError(err.message || "Unknown error");
     } finally {
