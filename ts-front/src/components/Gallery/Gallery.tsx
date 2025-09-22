@@ -14,6 +14,7 @@ const Gallery: React.FC = () => {
     setIsLoading(true);
     try {
       const imageList = await getAllImages();
+      console.log("Fetched images:", imageList);
       setImages(imageList);
     } catch (error) {
       notify.error("Failed to load images");
