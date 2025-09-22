@@ -5,37 +5,37 @@ import { authMiddleware } from "../middleware/authMiddleware";
 
 router.post(
   "/image/generate",
-  // authMiddleware,
+  authMiddleware,
   generativeControllers.textToImageController
 );
 
 router.post(
   "/generative/image/lucidOriginTTI",
-  // authMiddleware,
+  authMiddleware,
   generativeControllers.lucidOriginTTIController
 );
 
 router.post(
   "/generative/image/inpaint",
-  // authMiddleware,
+  authMiddleware,
   generativeControllers.inpaintImageController
 );
 
 router.post(
   "/generative/image/nanoBanana",
-  // authMiddleware,
+  authMiddleware,
   generativeControllers.nanaoBananaController
 );
 
 router.post(
   "/generative/image/sdxl",
-  // authMiddleware,
+  authMiddleware,
   generativeControllers.sdxlController
 );
 
-router.get("/images", generativeControllers.getAllImagesController);
+router.get("/images", authMiddleware,generativeControllers.getAllImagesController);
 
 // Make sure the route path matches the URL structure
-router.delete("/images/:filename", generativeControllers.deleteImageController);
+router.delete("/images/:filename",authMiddleware, generativeControllers.deleteImageController);
 
 export default router;
