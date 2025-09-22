@@ -68,15 +68,15 @@ const SDXL: React.FC = () => {
     try {
       const data = await sdxlAPI(params);
 
-      if (data.success && data.data?.result) {
+      if (data.success && data.success === "true" && data.data) {
         // The backend returns base64 image data, so we need to format it as a data URL
-        const imageDataUrl = `data:image/png;base64,${data.data.result}`;
+        const imageDataUrl = data.data.url;
         setImage(imageDataUrl);
         notify.success("Image generated successfully!");
       } else {
-        throw new Error(data.error || "Failed to generate image");
+        throw new Error("Failed to generate image");
       }
-    } catch (err: any) {
+    } catch (err:any) {
       setError(err.message || "Unknown error");
       notify.error(err.message || "An error occurred");
     } finally {
