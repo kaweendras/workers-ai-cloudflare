@@ -14,8 +14,8 @@ const Gallery: React.FC = () => {
     setIsLoading(true);
     try {
       const imageList = await getAllImages();
-      console.log("Fetched images:", imageList);
-      setImages(imageList);
+      console.log("Fetched images front:", imageList);
+      setImages(imageList.data.map(item => item.url)); // Extract URL strings from ImageItem objects
     } catch (error) {
       notify.error("Failed to load images");
       console.error("Error fetching images:", error);

@@ -8,6 +8,8 @@ import type {
   UnitedImageGenResponse,
   LoginRequest,
   LoginResponse,
+  IAllImageResponse,
+  ImageItem,
 } from "../types";
 
 import {getAllImages as fetchImages, deleteImage as deletePhoto} from "./imageKitServices";
@@ -160,18 +162,85 @@ export const sdxlAPI = async (
 };
 
 // Get all images
-export const getAllImages = async (): Promise<string[]> => {
+export const getAllImages = async (): Promise<IAllImageResponse> => {
   try {
-    const data = await fetchImages();
-    console.log("Images fetched from ImageKit:", data);
-
-    if (data) {
-      return data;
-    }
-    return [];
+    const response = await api.get("/images/all");
+    return response.data;
   } catch (error) {
-    console.error("Error fetching images:", error);
-    return [];
+    if (axios.isAxiosError(error)) {
+      throw new Error(
+        `API Error: ${error.response?.data?.error || error.message}`
+      );
+    }
+    throw error;
+  }
+};
+
+// Get all images from backend (Admin only or user's own images)
+export const getAllImagesFromBackend = async (): Promise<IAllImageResponse> => {
+  try {
+    const response = await api.get("/images/all");
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(
+        `API Error: ${error.response?.data?.message || error.message}`
+      );
+    }
+    throw error;
+  }
+};
+
+// Get user's own images from backend
+export const getMyImages = async (): Promise<IAllImageResponse> => {
+  try {
+    const response = await api.get("/images/my");
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(
+        `API Error: ${error.response?.data?.message || error.message}`
+      );
+    }
+    throw error;
+  }
+};
+
+// Get specific image by ID from backend
+export const getImageById = async (imageId: string): Promise<{
+  success: string;
+  message: string;
+  data: ImageItem;
+}> => {
+  try {
+    const response = await api.get(`/images/${imageId}`);
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(
+        `API Error: ${error.response?.data?.message || error.message}`
+      );
+    }
+    throw error;
+  }
+};
+
+// Delete image by ID from backend
+export const deleteImageById = async (imageId: string): Promise<{
+  success: string;
+  message: string;
+  data: ImageItem;
+}> => {
+  try {
+    const response = await api.delete(`/images/${imageId}`);
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(
+        `API Error: ${error.response?.data?.message || error.message}`
+      );
+    }
+    throw error;
   }
 };
 

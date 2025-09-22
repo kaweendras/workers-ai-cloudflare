@@ -67,6 +67,29 @@ export interface AuthUser {
   token: string;
 }
 
+export interface ImageItem {
+  _id: string;
+  url: string;
+  thumbnailUrl: string;
+  prompt: string;
+  guidance?: number;
+  seed?: number;
+  height?: number;
+  width?: number;
+  steps?: number;
+  userEmail: string;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
+
+export interface IAllImageResponse {
+  success: string;
+  message: string;
+  count: number;
+  data: ImageItem[];
+}
+
 export interface ImageMask {
   composite?: HTMLCanvasElement;
   layers?: HTMLCanvasElement[];
