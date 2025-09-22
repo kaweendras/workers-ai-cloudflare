@@ -8,20 +8,36 @@ import NanoBanana from "./components/NanoBanana/NanoBanana";
 import Gallery from "./components/Gallery/Gallery";
 import LucidOriginTTITab from "./components/LucidOriginTTITab";
 import SDXL from "./components/SDXL/SDXL";
+import Login from "./components/Login";
+import AuthGuard from "./components/AuthGuard";
+import { logout, getUserFromToken } from "./utils/auth";
 
 function App() {
   const [activeTab, setActiveTab] = useState("🖼️ Image Gallery");
+  const [authKey, setAuthKey] = useState(0); // Force re-render after login/logout
 
   const tabs = [
     "🖼️ Image Gallery",
     "✨ TTI FLUX",
-    "🎭 Inpainting",
-    "🍌 nanoBanana",
     "🌄 Lucid Origin TTI",
     "🚀 SDXL",
+    "🎭 Inpainting",
+    "🍌 nanoBanana",
   ];
 
-  // ...existing code...
+  const handleLoginSuccess = () => {
+    setAuthKey(prev => prev + 1); // Force re-render
+  };
+
+  const handleLogout = () => {
+    logout();
+    setAuthKey(prev => prev + 1); // Force re-render
+  };
+
+  // Get user info for display
+  const userInfo = getUserFromToken();
+  const userName = userInfo?.name || userInfo?.email || 'User';
+  const userRole = userInfo?.role || '';
 
   const renderContent = () => {
     switch (activeTab) {
@@ -42,17 +58,52 @@ function App() {
     }
   };
 
-  return (
+  const AuthenticatedApp = () => (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <header className="bg-white dark:bg-gray-800 shadow-md">
         <div className="container mx-auto px-4 py-6">
-          <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200">
-            🎨 AI Image Generation Studio
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">
-            Generate images from text or edit existing images with inpainting
-            using Cloudflare Workers AI
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200">
+                🎨 AI Image Generation Studio
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400 mt-2">
+                Generate images from text or edit existing images with inpainting
+                using Cloudflare Workers AI
+              </p>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="text-right">
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Welcome, {userName}
+                </p>
+                {userRole && (
+                  <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
+                    {userRole}
+                  </p>
+                )}
+              </div>
+              <button
+                onClick={handleLogout}
+                className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
+              >
+                <svg
+                  className="w-4 h-4 mr-1"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                  />
+                </svg>
+                Logout
+              </button>
+            </div>
+          </div>
         </div>
       </header>
 
@@ -78,6 +129,15 @@ function App() {
 
       <ToastContainer position="top-right" />
     </div>
+  );
+
+  return (
+    <AuthGuard
+      key={authKey}
+      fallback={<Login onLoginSuccess={handleLoginSuccess} />}
+    >
+      <AuthenticatedApp />
+    </AuthGuard>
   );
 }
 
