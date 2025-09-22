@@ -6,6 +6,9 @@ import {
 } from "../../interfaces/textToImageInterface";
 import { uploadImageBase64 } from "../imagekitService";
 
+import {addImage} from "../imageServices";
+import {IImage} from "../../models/imageModel";
+
 interface GeneratedImageResult {
   fileId: string;
   url: string;
@@ -21,7 +24,8 @@ const apiToken = process.env.CLOUDFLARE_API_TOKEN;
 export async function generateImage(
   prompt: string,
   steps: number = 4,
-  model: string = "@cf/black-forest-labs/flux-1-schnell"
+  model: string = "@cf/black-forest-labs/flux-1-schnell",
+  email: string | undefined
 ): Promise<GeneratedImageResult> {
   if (!accountId || !apiToken) {
     throw new Error(
@@ -90,6 +94,23 @@ export async function generateImage(
     console.log(
       `Image successfully generated and uploaded to ImageKit. URL: ${uploadResult.url}`
     );
+
+    //add image details to db with addImage function and IImage interface
+    try {
+      if(email) {
+        const imageData: Partial<IImage> = {
+          url: uploadResult.url,
+          thumbnailUrl: uploadResult.thumbnailUrl,
+          prompt: prompt,
+          steps: steps,
+          userEmail: email
+        };
+        await addImage(imageData);
+        console.log("Image data added to database:", imageData);
+      }
+    } catch (error) {
+      console.error("Error adding image to database:", error);
+    }
 
     return { 
       fileId: uploadResult.fileId,
