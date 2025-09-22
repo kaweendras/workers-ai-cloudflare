@@ -12,6 +12,13 @@ export default defineConfig({
       },
     },
     port: 3000,
+    host: true, // Allow external access
+    allowedHosts: [
+      "imagegen.duckdns.org",
+      "localhost",
+      "127.0.0.1",
+      ".duckdns.org" // Allow all duckdns.org subdomains
+    ],
     hmr: {
       overlay: false,
     },
