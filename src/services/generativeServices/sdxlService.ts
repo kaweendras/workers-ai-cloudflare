@@ -1,6 +1,8 @@
 import axios from 'axios';
 import { SdxlRequestInterface, SdxlResponseInterface } from '../../interfaces/sdxlInterface';
 import { uploadImageBase64 } from "../imagekitService";
+import { addImage } from "../imageServices";
+import { IImage } from "../../models/imageModel";
 
 interface GeneratedImageResult {
   fileId: string;
@@ -11,7 +13,8 @@ interface GeneratedImageResult {
 }
 
 export const sdxlService = async (
-  requestData: SdxlRequestInterface
+  requestData: SdxlRequestInterface,
+  email?: string
 ): Promise<GeneratedImageResult> => {
   try {
     // Validate input parameters
@@ -93,6 +96,27 @@ export const sdxlService = async (
       console.log(
         `SDXL image successfully generated and uploaded to ImageKit. URL: ${uploadResult.url}`
       );
+
+      // Add image details to database with addImage function and IImage interface
+      try {
+        if(email) {
+          const imageData: Partial<IImage> = {
+            url: uploadResult.url,
+            thumbnailUrl: uploadResult.thumbnailUrl,
+            prompt: requestData.prompt,
+            guidance: requestData.guidance,
+            height: requestData.height,
+            width: requestData.width,
+            steps: requestData.num_steps,
+            seed: requestData.seed,
+            userEmail: email
+          };
+          await addImage(imageData);
+          console.log("SDXL image data added to database:", imageData);
+        }
+      } catch (error) {
+        console.error("Error adding SDXL image to database:", error);
+      }
       
       return {
         fileId: uploadResult.fileId,

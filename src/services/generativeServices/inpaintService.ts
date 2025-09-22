@@ -4,16 +4,29 @@ import * as path from "path";
 import "dotenv/config";
 import { InpaintImageRequest } from "../../interfaces/inpaintInterface";
 
+import { uploadImageBase64 } from "../imagekitService";
+import { addImage } from "../imageServices";
+import { IImage } from "../../models/imageModel";
+
 // Validate environment variables
 const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
 const apiToken = process.env.CLOUDFLARE_API_TOKEN;
 const host = process.env.HOST || "localhost";
 const port = process.env.PORT || 4000;
 
+interface GeneratedImageResult {
+  fileId: string;
+  url: string;
+  thumbnailUrl: string;
+  fileName: string;
+  filePath: string;
+}
+
 export async function inpaintImage(
   requestData: InpaintImageRequest,
-  model: string = "@cf/runwayml/stable-diffusion-inpainting"
-): Promise<{ absolutePath: string; relativePath: string }> {
+  model: string = "@cf/runwayml/stable-diffusion-inpainting",
+  email?: string
+): Promise<GeneratedImageResult> {
   if (!accountId || !apiToken) {
     throw new Error(
       "Missing required environment variables: CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN"
@@ -214,28 +227,48 @@ export async function inpaintImage(
 
     const filename = `inpaint_${timestamp}_${sanitizedPrompt}.png`;
 
-    // Ensure the images directory exists (root level)
-    const imagesDir = path.join(process.cwd(), "images");
-    if (!fs.existsSync(imagesDir)) {
-      fs.mkdirSync(imagesDir, { recursive: true });
-    }
+    // Convert buffer to base64 for ImageKit upload
+    const base64Image = imageBuffer.toString('base64');
 
-    const imagePath = path.join(imagesDir, filename);
-
-    // Save the image buffer directly
-    fs.writeFileSync(imagePath, imageBuffer);
-
-    let relativePath = `http://${host}:${port}/images/${filename}`;
-    // If host does not start with localhost, use HTTPS
-    if (!host.startsWith("localhost")) {
-      relativePath = `http://${host}/images/${filename}`;
-    }
-
-    console.log(
-      `Image successfully inpainted and saved to: ${imagePath} . View at: ${relativePath}`
+    // Upload image to ImageKit using base64
+    const uploadResult = await uploadImageBase64(
+      base64Image, // base64 image data
+      filename,
+      "/generated-images", // folder in ImageKit
+      ["ai-generated", "inpainting", sanitizedPrompt.substring(0, 20)] // tags
     );
 
-    return { absolutePath: imagePath, relativePath };
+    console.log(
+      `Image successfully inpainted and uploaded to ImageKit. URL: ${uploadResult.url}`
+    );
+
+    // Add image details to database with addImage function and IImage interface
+    try {
+      if(email) {
+        const imageData: Partial<IImage> = {
+          url: uploadResult.url,
+          thumbnailUrl: uploadResult.thumbnailUrl,
+          prompt: requestData.prompt,
+          guidance: requestData.guidance,
+          height: requestData.height,
+          width: requestData.width,
+          steps: requestData.num_steps,
+          userEmail: email
+        };
+        await addImage(imageData);
+        console.log("Inpainted image data added to database:", imageData);
+      }
+    } catch (error) {
+      console.error("Error adding inpainted image to database:", error);
+    }
+
+    return { 
+      fileId: uploadResult.fileId,
+      url: uploadResult.url,
+      thumbnailUrl: uploadResult.thumbnailUrl,
+      fileName: uploadResult.name,
+      filePath: uploadResult.filePath
+    };
   } catch (error) {
     if (axios.isAxiosError(error)) {
       let errorMessage = error.message;
@@ -270,8 +303,9 @@ export async function inpaintImageLegacy(
   maskBase64: string,
   prompt: string,
   steps: number = 4,
-  model: string = "@cf/runwayml/stable-diffusion-inpainting"
-): Promise<{ absolutePath: string; relativePath: string }> {
+  model: string = "@cf/runwayml/stable-diffusion-inpainting",
+  email?: string
+): Promise<GeneratedImageResult> {
   const requestData: InpaintImageRequest = {
     prompt,
     image_b64: imageBase64,
@@ -279,7 +313,7 @@ export async function inpaintImageLegacy(
     num_steps: steps,
   };
 
-  return inpaintImage(requestData, model);
+  return inpaintImage(requestData, model, email);
 }
 
 // Example usage function (commented out for production)

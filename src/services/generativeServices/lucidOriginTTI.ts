@@ -5,6 +5,8 @@ import {
   ImageGenerationResponse,
 } from "../../interfaces/textToImageInterface";
 import { uploadImageBase64 } from "../imagekitService";
+import { addImage } from "../imageServices";
+import { IImage } from "../../models/imageModel";
 
 interface LucidOriginTTIParams {
   prompt: string;
@@ -28,7 +30,8 @@ const accountId = process.env.CLOUDFLARE_ACCOUNT_ID || "";
 const apiToken = process.env.CLOUDFLARE_API_TOKEN || "";
 
 export async function lucidOriginTTI(
-  params: LucidOriginTTIParams
+  params: LucidOriginTTIParams,
+  email?: string
 ): Promise<GeneratedImageResult> {
   const {
     prompt,
@@ -125,6 +128,27 @@ export async function lucidOriginTTI(
     console.log(
       `Lucid Origin image successfully generated and uploaded to ImageKit. URL: ${uploadResult.url}`
     );
+
+    // Add image details to database with addImage function and IImage interface
+    try {
+      if(email) {
+        const imageData: Partial<IImage> = {
+          url: uploadResult.url,
+          thumbnailUrl: uploadResult.thumbnailUrl,
+          prompt: prompt,
+          guidance: guidance,
+          height: height,
+          width: width,
+          steps: diffusionSteps,
+          seed: seed,
+          userEmail: email
+        };
+        await addImage(imageData);
+        console.log("Lucid Origin image data added to database:", imageData);
+      }
+    } catch (error) {
+      console.error("Error adding Lucid Origin image to database:", error);
+    }
 
     return {
       fileId: uploadResult.fileId,

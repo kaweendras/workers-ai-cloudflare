@@ -2,6 +2,8 @@ import { OpenAI } from "openai";
 import dotenv from "dotenv";
 import { ImageCompletionInterface } from "../../interfaces/ImageCompletionInterface";
 import { uploadImageBase64 } from "../imagekitService";
+import { addImage } from "../imageServices";
+import { IImage } from "../../models/imageModel";
 
 interface GeneratedImageResult {
   fileId: string;
@@ -21,7 +23,7 @@ const openai = new OpenAI({
     "X-Title": "<YOUR_SITE_NAME>", // Optional. Site title for rankings on openrouter.ai.
   },
 });
-export async function nanaoBanana(prompt: string, imageURL: string): Promise<GeneratedImageResult> {
+export async function nanaoBanana(prompt: string, imageURL: string, email?: string): Promise<GeneratedImageResult> {
   try {
     const completion = await openai.chat.completions.create({
       model: "google/gemini-2.5-flash-image-preview:free",
@@ -83,6 +85,22 @@ export async function nanaoBanana(prompt: string, imageURL: string): Promise<Gen
     console.log(
       `NanoBanana image successfully generated and uploaded to ImageKit. URL: ${uploadResult.url}`
     );
+
+    // Add image details to database with addImage function and IImage interface
+    try {
+      if(email) {
+        const imageData: Partial<IImage> = {
+          url: uploadResult.url,
+          thumbnailUrl: uploadResult.thumbnailUrl,
+          prompt: prompt,
+          userEmail: email
+        };
+        await addImage(imageData);
+        console.log("NanoBanana image data added to database:", imageData);
+      }
+    } catch (error) {
+      console.error("Error adding NanoBanana image to database:", error);
+    }
 
     return {
       fileId: uploadResult.fileId,
