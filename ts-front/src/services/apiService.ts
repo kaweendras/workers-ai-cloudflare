@@ -6,9 +6,13 @@ import type {
   InpaintImageRequest,
   NanoBananaRequest,
   UnitedImageGenResponse,
+  LoginRequest,
+  LoginResponse,
 } from "../types";
 
 import {getAllImages as fetchImages, deleteImage as deletePhoto} from "./imageKitServices";
+
+import {getAuthToken} from "../utils/auth";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:4001/api/v1";
@@ -17,6 +21,10 @@ const IMGBB_API_KEY = import.meta.env.VITE_IMGBB_API_KEY;
 const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 120000, // 2 minutes
+  headers: {
+    "Content-Type": "application/json",
+    "authorization": `Bearer ${getAuthToken()}`,
+  },
 });
 
 // Lucid Origin TTI image generation
@@ -38,6 +46,21 @@ export const generateLucidOriginTTI = async (
     if (axios.isAxiosError(error)) {
       throw new Error(
         `API Error: ${error.response?.data?.error || error.message}`
+      );
+    }
+    throw error;
+  }
+};
+
+// User authentication
+export const loginUser = async (credentials: LoginRequest): Promise<LoginResponse> => {
+  try {
+    const response = await api.post("/users/login", credentials);
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(
+        `Login failed: ${error.response?.data?.message || error.response?.data?.error || error.message}`
       );
     }
     throw error;
