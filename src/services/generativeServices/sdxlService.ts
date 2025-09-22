@@ -1,11 +1,18 @@
 import axios from 'axios';
-import * as fs from 'fs';
-import * as path from 'path';
 import { SdxlRequestInterface, SdxlResponseInterface } from '../../interfaces/sdxlInterface';
+import { uploadImageBase64 } from "../imagekitService";
+
+interface GeneratedImageResult {
+  fileId: string;
+  url: string;
+  thumbnailUrl: string;
+  fileName: string;
+  filePath: string;
+}
 
 export const sdxlService = async (
   requestData: SdxlRequestInterface
-): Promise<SdxlResponseInterface> => {
+): Promise<GeneratedImageResult> => {
   try {
     // Validate input parameters
     if (!requestData.prompt || requestData.prompt.trim().length === 0) {
@@ -71,29 +78,28 @@ export const sdxlService = async (
         .replace(/\s+/g, '-')
         .substring(0, 50);
       const fileName = `${timestamp}_sdxl_${sanitizedPrompt}.png`;
-      const filePath = path.join(process.cwd(), 'images', fileName);
       
-      // Ensure images directory exists
-      const imagesDir = path.join(process.cwd(), 'images');
-      if (!fs.existsSync(imagesDir)) {
-        fs.mkdirSync(imagesDir, { recursive: true });
-      }
-      
-      fs.writeFileSync(filePath, buffer);
-      
-      // Convert to base64 for response
+      // Convert to base64 for ImageKit upload
       const base64Image = buffer.toString('base64');
       
+      // Upload image to ImageKit
+      const uploadResult = await uploadImageBase64(
+        base64Image,
+        fileName,
+        "/generated-images", // folder in ImageKit
+        ["ai-generated", "sdxl", "stable-diffusion", sanitizedPrompt.substring(0, 20)] // tags
+      );
+
+      console.log(
+        `SDXL image successfully generated and uploaded to ImageKit. URL: ${uploadResult.url}`
+      );
+      
       return {
-        success: true,
-        data: {
-          result: base64Image,
-          filePath,
-          fileName,
-          meta: {
-            seed: requestData.seed
-          }
-        }
+        fileId: uploadResult.fileId,
+        url: uploadResult.url,
+        thumbnailUrl: uploadResult.thumbnailUrl,
+        fileName: uploadResult.name,
+        filePath: uploadResult.filePath
       };
     }
 
@@ -107,15 +113,9 @@ export const sdxlService = async (
       const apiError = error.response.data?.errors?.[0]?.message || 
                       error.response.data?.message || 
                       `API Error: ${error.response.status}`;
-      return {
-        success: false,
-        error: apiError
-      };
+      throw new Error(apiError);
     }
     
-    return {
-      success: false,
-      error: error.message || 'Unknown error occurred'
-    };
+    throw new Error(error.message || 'Unknown error occurred');
   }
 };
