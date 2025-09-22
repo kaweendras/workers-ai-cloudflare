@@ -36,6 +36,18 @@ export interface ImageData {
   relativePath: string;
 }
 
+export interface UnitedImageGenResponse {
+  success: string;
+  message: string;
+  data: {
+    fileId: string;
+    url: string;
+    thumbnailUrl: string;
+    fileName: string;
+    filePath: string;
+  };
+}
+
 export interface ImageMask {
   composite?: HTMLCanvasElement;
   layers?: HTMLCanvasElement[];
