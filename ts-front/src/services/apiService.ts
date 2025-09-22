@@ -5,7 +5,10 @@ import type {
   ImageGenerationRequest,
   InpaintImageRequest,
   NanoBananaRequest,
+  UnitedImageGenResponse,
 } from "../types";
+
+import {getAllImages as fetchImages, deleteImage as deletePhoto} from "./imageKitServices";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:4001/api/v1";
@@ -19,16 +22,15 @@ const api = axios.create({
 // Lucid Origin TTI image generation
 export const generateLucidOriginTTI = async (
   params: any
-): Promise<{ image: string }> => {
+): Promise<UnitedImageGenResponse> => {
   try {
     const response = await api.post("/generative/image/lucidOriginTTI", params);
     const responseData = response.data;
 
-    // Check if the API returned success and extract the image path
-    if (responseData.success === "true" && responseData.data?.relativePath) {
-      // For now, return the relativePath as the image URL
-      // Note: This is different from base64 - the frontend will need to handle this as a URL
-      return { image: responseData.data.relativePath };
+    // Check if the API returned success and extract the image data
+    if (responseData.success === "true" && responseData.data?.url) {
+      // Return the complete response data structure
+      return responseData;
     } else {
       throw new Error(responseData.message || "Failed to generate image");
     }
@@ -45,7 +47,7 @@ export const generateLucidOriginTTI = async (
 // Text to image generation
 export const generateImage = async (
   params: ImageGenerationRequest
-): Promise<ApiResponse<ImageData>> => {
+): Promise<UnitedImageGenResponse> => {
   try {
     const response = await api.post("/image/generate", params);
     return response.data;
@@ -62,7 +64,7 @@ export const generateImage = async (
 // Inpaint image
 export const inpaintImage = async (
   params: InpaintImageRequest
-): Promise<ApiResponse<ImageData>> => {
+): Promise<UnitedImageGenResponse> => {
   try {
     const response = await api.post("/generative/image/inpaint", params);
     return response.data;
@@ -79,7 +81,7 @@ export const inpaintImage = async (
 // nanoBanana image processing
 export const processWithNanoBanana = async (
   params: NanoBananaRequest
-): Promise<ApiResponse<ImageData>> => {
+): Promise<UnitedImageGenResponse> => {
   try {
     const response = await api.post("/generative/image/nanoBanana", params);
     return response.data;
@@ -124,11 +126,11 @@ interface SdxlResponse {
 
 export const sdxlAPI = async (
   requestData: SdxlRequest
-): Promise<SdxlResponse> => {
+): Promise<UnitedImageGenResponse> => {
   try {
     const response = await api.post('/generative/image/sdxl', requestData);
     return response.data;
-  } catch (error: any) {
+  } catch (error:any) {
     console.error('SDXL API Error:', error);
     throw new Error(error.response?.data?.error || 'API request failed');
   }
@@ -137,11 +139,11 @@ export const sdxlAPI = async (
 // Get all images
 export const getAllImages = async (): Promise<string[]> => {
   try {
-    const response = await api.get("/images");
-    const data = response.data;
+    const data = await fetchImages();
+    console.log("Images fetched from ImageKit:", data);
 
-    if (data.success === "true" && Array.isArray(data.data)) {
-      return data.data;
+    if (data) {
+      return data;
     }
     return [];
   } catch (error) {
@@ -153,8 +155,8 @@ export const getAllImages = async (): Promise<string[]> => {
 // Delete an image by filename
 export const deleteImage = async (filename: string): Promise<boolean> => {
   try {
-    const response = await api.delete(`/images/${filename}`);
-    return response.data.success === "true";
+    const response = await deletePhoto(filename);
+    return true;
   } catch (error) {
     console.error("Error deleting image:", error);
     return false;
