@@ -81,6 +81,7 @@ const NanoBanana: React.FC = () => {
         return;
       }
       finalImageUrl = imageUrl.trim();
+      console.log("Using image URL:", finalImageUrl);
     }
 
     // Now process with nanoBanana
