@@ -23,6 +23,8 @@ const textToImageController = async (
       steps,
       model
     );
+
+    console.log("Text to Image Response:", textToImageResponse);
     return res.status(200).json({
       success: "true",
       message: "Image generated successfully",
@@ -194,6 +196,44 @@ const nanaoBananaController = async (
   }
 };
 
+
+
+const sdxlController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const requestData: SdxlRequestInterface = req.body;
+    
+    const result = await sdxlService(requestData);
+    
+    if (result.url) {
+      res.status(200).json({
+        success: "true",
+        message: "Image generated successfully",
+        data: result
+      });
+    } else {
+      res.status(400).json({
+        success: "false",
+        message: "Failed to generate image",
+        data: []
+      });
+    }
+  } catch (error: any) {
+    console.error('SDXL Controller Error:', error.message);
+    res.status(500).json({
+      success: "false",
+      error: 'Internal server error'
+    });
+  }
+};
+
+
+
+//// manipulations
+
 const getAllImagesController = (req: Request, res: Response) => {
   const imagesDir = path.join(process.cwd(), "images");
   try {
@@ -306,30 +346,6 @@ const deleteImageController = (req: Request, res: Response) => {
       message: "Failed to delete image",
       error: err.message,
       data: [],
-    });
-  }
-};
-
-const sdxlController = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const requestData: SdxlRequestInterface = req.body;
-    
-    const result = await sdxlService(requestData);
-    
-    if (result.success) {
-      res.status(200).json(result);
-    } else {
-      res.status(400).json(result);
-    }
-  } catch (error: any) {
-    console.error('SDXL Controller Error:', error.message);
-    res.status(500).json({
-      success: false,
-      error: 'Internal server error'
     });
   }
 };
