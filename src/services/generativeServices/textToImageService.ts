@@ -1,23 +1,28 @@
 import axios from "axios";
-import * as fs from "fs";
-import * as path from "path";
 import "dotenv/config";
 import {
   ImageGenerationRequest,
   ImageGenerationResponse,
 } from "../../interfaces/textToImageInterface";
+import { uploadImageBase64 } from "../imagekitService";
+
+interface GeneratedImageResult {
+  fileId: string;
+  url: string;
+  thumbnailUrl: string;
+  fileName: string;
+  filePath: string;
+}
 
 // Validate environment variables
 const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
 const apiToken = process.env.CLOUDFLARE_API_TOKEN;
-const host = process.env.HOST || "localhost";
-const port = process.env.PORT || 4000;
 
 export async function generateImage(
   prompt: string,
   steps: number = 4,
   model: string = "@cf/black-forest-labs/flux-1-schnell"
-): Promise<string | any> {
+): Promise<GeneratedImageResult> {
   if (!accountId || !apiToken) {
     throw new Error(
       "Missing required environment variables: CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN"
@@ -73,27 +78,26 @@ export async function generateImage(
       .substring(0, 50); // Limit length
 
     const filename = `${timestamp}_${sanitizedPrompt}.png`;
-    // Ensure the images directory exists (root level)
-    const imagesDir = path.join(process.cwd(), "images");
-    if (!fs.existsSync(imagesDir)) {
-      fs.mkdirSync(imagesDir, { recursive: true });
-    }
-    const imagePath = path.join(imagesDir, filename);
 
-    // Convert base64 to buffer and save
-    const imageBuffer = Buffer.from(http, "base64");
-    fs.writeFileSync(imagePath, imageBuffer);
-
-    let relativePath = `http://${host}:${port}/images/${filename}`;
-    //if host does not start with localhost
-    if (!host.startsWith("localhost")) {
-      relativePath = `https://${host}/images/${filename}`;
-    }
+    // Upload image to ImageKit using base64
+    const uploadResult = await uploadImageBase64(
+      http, // base64 image data from Cloudflare API
+      filename,
+      "/generated-images", // folder in ImageKit
+      ["ai-generated", "text-to-image", sanitizedPrompt.substring(0, 20)] // tags
+    );
 
     console.log(
-      `Image successfully generated and saved to: ${imagePath} . View at: ${relativePath}`
+      `Image successfully generated and uploaded to ImageKit. URL: ${uploadResult.url}`
     );
-    return { absolutePath: imagePath, relativePath };
+
+    return { 
+      fileId: uploadResult.fileId,
+      url: uploadResult.url,
+      thumbnailUrl: uploadResult.thumbnailUrl,
+      fileName: uploadResult.name,
+      filePath: uploadResult.filePath
+    };
   } catch (error) {
     if (axios.isAxiosError(error)) {
       console.error("API Error:", error.response?.data || error.message);
@@ -110,15 +114,15 @@ export async function generateImage(
 }
 
 // usage of the function
-// export async function generateImageExample(): Promise<string | undefined> {
+// export async function generateImageExample(): Promise<GeneratedImageResult | undefined> {
 //   try {
-//     const imagePath = await generateImage(
+//     const imageResult = await generateImage(
 //       "Dark city at night from distance",
 //       8,
 //       "@cf/black-forest-labs/flux-1-schnell"
 //     );
-//     // console.log("Generated image saved at:", imagePath);
-//     return imagePath;
+//     console.log("Generated image uploaded to ImageKit:", imageResult.url);
+//     return imageResult;
 //   } catch (error) {
 //     console.error("Error generating image:", error);
 //     return undefined;
