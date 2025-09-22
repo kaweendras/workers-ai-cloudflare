@@ -1,7 +1,7 @@
 import express from "express";
 const router = express.Router();
 import * as userController from "../controllers/userControllers";
-import { authMiddleware } from "../middleware/authMiddleware";
+import { authMiddleware,adminMiddleware } from "../middleware/authMiddleware";
 
 /**
  * POST api/v1/users/login
@@ -15,7 +15,7 @@ router.post("/users/login", userController.loginUserController);
  */
 router.post(
   "/users/create",
-  // authMiddleware,
+  adminMiddleware,
   userController.createUsersController
 );
 
