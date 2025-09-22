@@ -92,11 +92,11 @@ const NanoBanana: React.FC = () => {
       });
 
       if (response.success === "true" && response.data) {
-        const resultUrl = response.data.relativePath;
+        const resultUrl = response.data.url;
         setResultImage(resultUrl);
         notify.success("Image processed successfully!");
       } else {
-        notify.error(response.error || "Failed to process image");
+        notify.error("Failed to process image");
       }
     } catch (error) {
       notify.error("Error processing with nanoBanana");
