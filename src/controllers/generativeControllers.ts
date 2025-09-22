@@ -11,17 +11,22 @@ import * as fs from "fs";
 
 import { verifyToken } from "../utils/authUtils";
 
+import { decodedEmail } from "../middleware/authMiddleware";
+
 const textToImageController = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   const { prompt, steps, model } = req.body;
+
+  const email = decodedEmail(req) as string;
   try {
     const textToImageResponse = await generativeServices.generateImage(
       prompt,
       steps,
-      model
+      model,
+      email
     );
 
     console.log("Text to Image Response:", textToImageResponse);
@@ -47,6 +52,7 @@ const lucidOriginTTIController = async (
   next: NextFunction
 ) => {
   const { prompt, steps, height, width, guidance } = req.body;
+  const email = decodedEmail(req) as string;
   try {
     const lucidOriginTTIResponse = await lucidOriginTTI({
       prompt,
@@ -54,7 +60,7 @@ const lucidOriginTTIController = async (
       height,
       width,
       guidance,
-    });
+    }, email);
     return res.status(200).json({
       success: "true",
       message: "Image generated successfully",
@@ -92,6 +98,8 @@ const inpaintImageController = async (
       seed,
       model,
     } = req.body;
+
+    const email = decodedEmail(req) as string;
 
     // Validate required fields according to the new schema
     if (!prompt) {
@@ -153,7 +161,8 @@ const inpaintImageController = async (
 
     const inpaintResponse = await inpaintServices.inpaintImage(
       requestData,
-      model
+      model,
+      email
     );
 
     return res.status(200).json({
@@ -178,8 +187,9 @@ const nanaoBananaController = async (
   next: NextFunction
 ) => {
   const { prompt, imageURL } = req.body;
+  const email = decodedEmail(req) as string;
   try {
-    const nanaoBananaResponse = await nanaoBanana(prompt, imageURL);
+    const nanaoBananaResponse = await nanaoBanana(prompt, imageURL, email);
     return res.status(200).json({
       success: "true",
       message: "Image processed successfully",
@@ -205,8 +215,9 @@ const sdxlController = async (
 ) => {
   try {
     const requestData: SdxlRequestInterface = req.body;
+    const email = decodedEmail(req) as string;
     
-    const result = await sdxlService(requestData);
+    const result = await sdxlService(requestData, email);
     
     if (result.url) {
       res.status(200).json({
