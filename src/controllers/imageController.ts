@@ -40,9 +40,12 @@ const getAllImagesController = async (
     //   });
 
     //redirect to getImagesByEmailController
+
+    console.log("Non-admin user attempted to access all images, redirecting to their own images.");
       return getImagesByEmailController(req, res, next);
     }
 
+    console.log("Admin access granted to all images.");
     const result = await imageServices.getAllImages();
     
     if (result.success === "true" && result.data) {
