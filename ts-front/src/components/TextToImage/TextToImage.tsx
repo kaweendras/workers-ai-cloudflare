@@ -51,11 +51,11 @@ const TextToImage: React.FC = () => {
       });
 
       if (response.success === "true" && response.data) {
-        const imageUrl = response.data.relativePath;
+        const imageUrl = response.data.url;
         setGeneratedImage(imageUrl);
         notify.success("Image generated successfully!");
       } else {
-        notify.error(response.error || "Failed to generate image");
+        notify.error("Failed to generate image");
       }
     } catch (error) {
       notify.error("Error generating image");
