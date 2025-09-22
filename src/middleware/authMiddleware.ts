@@ -49,7 +49,7 @@ export const adminMiddleware = (
   next();
 };
 
-export const decodedToken = (req: Request): JwtPayload | null => {
+export const decodedEmail = (req: Request): string | null => {
   const token = req.headers.authorization?.split(" ")[1];
   if (!token) {
     console.log(`No token provided`);
@@ -60,5 +60,10 @@ export const decodedToken = (req: Request): JwtPayload | null => {
     console.log(`Invalid token: ${error}`);
     return null;
   }
-  return decoded as JwtPayload;
+  if (!decoded) {
+    console.log(`No decoded token`);
+    return null;
+  }
+  const { email } = decoded as JwtPayload;
+  return email;
 };
