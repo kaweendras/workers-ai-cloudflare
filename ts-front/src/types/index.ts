@@ -48,6 +48,25 @@ export interface UnitedImageGenResponse {
   };
 }
 
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  success: string;
+  token: string;
+  role: string;
+}
+
+export interface AuthUser {
+  id?: string;
+  email?: string;
+  name?: string;
+  role: string;
+  token: string;
+}
+
 export interface ImageMask {
   composite?: HTMLCanvasElement;
   layers?: HTMLCanvasElement[];
