@@ -4,6 +4,7 @@ import cors from "cors";
 import mongoose from "mongoose";
 import userRoutes from "./routes/userRoutes";
 import generativeRoutes from "./routes/generativeRoutes";
+import imageRoutes from "./routes/imageRoutes"
 const path = require("path");
 
 dotenv.config();
@@ -51,6 +52,7 @@ app.get("/api/v1/test", (req, res) => {
 app.use("/images", express.static(path.join(process.cwd(), "images")));
 app.use("/api/v1", userRoutes);
 app.use("/api/v1", generativeRoutes);
+app.use("/api/v1", imageRoutes);
 
 mongoose
   .connect(MONGODB_URI)
