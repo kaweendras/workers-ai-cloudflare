@@ -24,6 +24,16 @@ router.get(
 );
 
 /**
+ *  GET api/v1/images/allimagesbyuseremail
+ * Get all images by user email (admin only)
+ */
+router.get(
+  "/images/allimagesbyuseremail",
+  authMiddleware,
+  imageController.getImagesByEmailAdminController
+);
+
+/**
  * GET api/v1/images/:imageId
  * Get image by ID (owner or admin only)
  */
