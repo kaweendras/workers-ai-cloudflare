@@ -33,6 +33,12 @@ router.post(
   generativeControllers.sdxlController
 );
 
+router.post(
+  "/generative/image/imageToImage",
+  authMiddleware,
+  generativeControllers.imageToImageController
+);
+
 router.get("/images", authMiddleware,generativeControllers.getAllImagesController);
 
 // Make sure the route path matches the URL structure
