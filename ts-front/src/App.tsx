@@ -8,6 +8,7 @@ import NanoBanana from "./components/NanoBanana/NanoBanana";
 import Gallery from "./components/Gallery/Gallery";
 import LucidOriginTTITab from "./components/LucidOriginTTITab";
 import SDXL from "./components/SDXL/SDXL";
+import ImageToImage from "./components/ImageToImage/ImageToImage";
 import Login from "./components/Login";
 import AuthGuard from "./components/AuthGuard";
 import { logout, getUserFromToken } from "./utils/auth";
@@ -21,6 +22,7 @@ function App() {
     "✨ TTI FLUX",
     "🌄 Lucid Origin TTI",
     "🚀 SDXL",
+    "🔄 Image to Image",
     "🎭 Inpainting",
     "🍌 nanoBanana",
   ];
@@ -53,6 +55,8 @@ function App() {
         return <LucidOriginTTITab />;
       case "🚀 SDXL":
         return <SDXL />;
+      case "🔄 Image to Image":
+        return <ImageToImage />;
       default:
         return <Gallery />;
     }
@@ -120,8 +124,9 @@ function App() {
             with the required API endpoints: <code>/api/v1/image/generate</code>
             , <code>/api/v1/generative/image/inpaint</code>,
             <code>/api/v1/images</code>, and{" "}
-            <code>/api/v1/generative/image/nanoBanana</code>, and{" "}
-            <code>/api/v1/generative/image/sdxl</code>. For nanoBanana,
+            <code>/api/v1/generative/image/nanoBanana</code>,{" "}
+            <code>/api/v1/generative/image/sdxl</code>, and{" "}
+            <code>/api/v1/generative/image/imageToImage</code>. For nanoBanana,
             make sure the IMGBB_API_KEY is set in your .env file.
           </p>
         </div>
