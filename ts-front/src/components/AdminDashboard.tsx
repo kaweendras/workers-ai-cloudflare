@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { getAllUsers, createUser } from "../services/apiService";
+import { getAllUsers, createUser, deleteUser } from "../services/apiService";
 import type { User, CreateUserRequest } from "../types";
 import { isAdmin } from "../utils/auth";
 
@@ -9,6 +9,8 @@ const AdminDashboard: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null); // Track which user is being deleted
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null); // Track confirm dialog
   const [newUser, setNewUser] = useState<CreateUserRequest>({
     name: "",
     email: "",
@@ -102,6 +104,40 @@ const AdminDashboard: React.FC = () => {
     }));
   };
 
+  const handleDeleteUser = async (email: string) => {
+    try {
+      setDeleting(email);
+      setError(null);
+
+      const response = await deleteUser(email);
+
+      if (response.success === "true") {
+        // Refresh users list
+        await fetchUsers();
+        setDeleteConfirm(null);
+      } else {
+        throw new Error(response.message || "Failed to delete user");
+      }
+    } catch (err) {
+      console.error("Error deleting user:", err);
+      setError(
+        err instanceof Error
+          ? err.message
+          : "An error occurred while deleting user"
+      );
+    } finally {
+      setDeleting(null);
+    }
+  };
+
+  const confirmDelete = (email: string) => {
+    setDeleteConfirm(email);
+  };
+
+  const cancelDelete = () => {
+    setDeleteConfirm(null);
+  };
+
   if (!isUserAdmin) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900 flex items-center justify-center">
@@ -137,6 +173,48 @@ const AdminDashboard: React.FC = () => {
             <div className="flex items-center">
               <span className="text-red-400 text-xl mr-2">⚠️</span>
               <p className="text-red-400">{error}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Confirmation Dialog */}
+        {deleteConfirm && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-gray-900 border border-red-500/30 rounded-xl p-6 max-w-md mx-4">
+              <div className="text-center">
+                <div className="text-red-400 text-6xl mb-4">⚠️</div>
+                <h3 className="text-xl font-bold text-white mb-2">
+                  Confirm Deletion
+                </h3>
+                <p className="text-gray-300 mb-6">
+                  Are you sure you want to delete the user with email:{" "}
+                  <span className="font-bold text-red-400">
+                    {deleteConfirm}
+                  </span>
+                  ?
+                  <br />
+                  <span className="text-red-400 text-sm">
+                    This action cannot be undone.
+                  </span>
+                </p>
+                <div className="flex gap-4 justify-center">
+                  <button
+                    onClick={cancelDelete}
+                    className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-4 py-2 rounded-lg transition-all duration-200 font-medium"
+                  >
+                    ✖️ Cancel
+                  </button>
+                  <button
+                    onClick={() => handleDeleteUser(deleteConfirm)}
+                    disabled={deleting === deleteConfirm}
+                    className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 disabled:from-gray-600 disabled:to-gray-600 text-white px-4 py-2 rounded-lg transition-all duration-200 font-medium disabled:cursor-not-allowed"
+                  >
+                    {deleting === deleteConfirm
+                      ? "⏳ Deleting..."
+                      : "🗑️ Delete"}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -273,6 +351,9 @@ const AdminDashboard: React.FC = () => {
                     <th className="text-left py-3 px-4 text-gray-300 font-medium">
                       Created
                     </th>
+                    <th className="text-left py-3 px-4 text-gray-300 font-medium">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -305,6 +386,17 @@ const AdminDashboard: React.FC = () => {
                       </td>
                       <td className="py-4 px-4 text-gray-400">
                         {new Date(user.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="py-4 px-4">
+                        <button
+                          onClick={() => confirmDelete(user.email)}
+                          disabled={deleting === user.email}
+                          className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 disabled:from-gray-600 disabled:to-gray-600 text-white px-3 py-1.5 rounded-lg transition-all duration-200 font-medium text-sm disabled:cursor-not-allowed"
+                        >
+                          {deleting === user.email
+                            ? "🗑️ Deleting..."
+                            : "🗑️ Delete"}
+                        </button>
                       </td>
                     </tr>
                   ))}
