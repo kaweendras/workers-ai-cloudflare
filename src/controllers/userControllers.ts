@@ -229,7 +229,7 @@ const deleteUserByEmailController = async (
     });
   }
 
-  const email = req.query.email as string;
+  const email = req.body.email as string;
   try {
     const deleted = await deleteUserByEmail(email);
     if (!deleted) {
