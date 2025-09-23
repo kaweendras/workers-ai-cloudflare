@@ -1,7 +1,7 @@
 import express from "express";
 const router = express.Router();
 import * as userController from "../controllers/userControllers";
-import { authMiddleware,adminMiddleware } from "../middleware/authMiddleware";
+import { authMiddleware, adminMiddleware } from "../middleware/authMiddleware";
 
 /**
  * POST api/v1/users/login
@@ -47,6 +47,16 @@ router.get(
   "/users/getUserByEmail",
   authMiddleware,
   userController.getUserByEmailController
+);
+
+/**
+ * DELETE api/v1/users/deleteUserByEmail
+ * Delete user by email (admin only)
+ */
+router.delete(
+  "/users/deleteUserByEmail",
+  adminMiddleware,
+  userController.deleteUserByEmailController
 );
 
 export default router;
