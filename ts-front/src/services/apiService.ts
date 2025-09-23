@@ -10,11 +10,17 @@ import type {
   LoginResponse,
   IAllImageResponse,
   ImageItem,
+  User,
+  CreateUserRequest,
+  UserResponse,
 } from "../types";
 
-import {getAllImages as fetchImages, deleteImage as deletePhoto} from "./imageKitServices";
+import {
+  getAllImages as fetchImages,
+  deleteImage as deletePhoto,
+} from "./imageKitServices";
 
-import {getAuthToken} from "../utils/auth";
+import { getAuthToken } from "../utils/auth";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:4001/api/v1";
@@ -25,7 +31,7 @@ const api = axios.create({
   timeout: 120000, // 2 minutes
   headers: {
     "Content-Type": "application/json",
-    "authorization": `Bearer ${getAuthToken()}`,
+    authorization: `Bearer ${getAuthToken()}`,
   },
 });
 
@@ -55,14 +61,95 @@ export const generateLucidOriginTTI = async (
 };
 
 // User authentication
-export const loginUser = async (credentials: LoginRequest): Promise<LoginResponse> => {
+export const loginUser = async (
+  credentials: LoginRequest
+): Promise<LoginResponse> => {
   try {
     const response = await api.post("/users/login", credentials);
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
       throw new Error(
-        `Login failed: ${error.response?.data?.message || error.response?.data?.error || error.message}`
+        `Login failed: ${
+          error.response?.data?.message ||
+          error.response?.data?.error ||
+          error.message
+        }`
+      );
+    }
+    throw error;
+  }
+};
+
+// User management (Admin only)
+export const getAllUsers = async (): Promise<UserResponse> => {
+  try {
+    // Update headers with current token
+    const token = getAuthToken();
+    if (token) {
+      api.defaults.headers["authorization"] = `Bearer ${token}`;
+    }
+
+    const response = await api.get("/users/getall");
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(
+        `Failed to fetch users: ${
+          error.response?.data?.message ||
+          error.response?.data?.error ||
+          error.message
+        }`
+      );
+    }
+    throw error;
+  }
+};
+
+export const createUser = async (
+  userData: CreateUserRequest
+): Promise<UserResponse> => {
+  try {
+    // Update headers with current token
+    const token = getAuthToken();
+    if (token) {
+      api.defaults.headers["authorization"] = `Bearer ${token}`;
+    }
+
+    const response = await api.post("/users/create", userData);
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(
+        `Failed to create user: ${
+          error.response?.data?.message ||
+          error.response?.data?.error ||
+          error.message
+        }`
+      );
+    }
+    throw error;
+  }
+};
+
+export const getUserProfile = async (): Promise<UserResponse> => {
+  try {
+    // Update headers with current token
+    const token = getAuthToken();
+    if (token) {
+      api.defaults.headers["authorization"] = `Bearer ${token}`;
+    }
+
+    const response = await api.get("/users/profile");
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(
+        `Failed to fetch profile: ${
+          error.response?.data?.message ||
+          error.response?.data?.error ||
+          error.message
+        }`
       );
     }
     throw error;
@@ -153,11 +240,11 @@ export const sdxlAPI = async (
   requestData: SdxlRequest
 ): Promise<UnitedImageGenResponse> => {
   try {
-    const response = await api.post('/generative/image/sdxl', requestData);
+    const response = await api.post("/generative/image/sdxl", requestData);
     return response.data;
-  } catch (error:any) {
-    console.error('SDXL API Error:', error);
-    throw new Error(error.response?.data?.error || 'API request failed');
+  } catch (error: any) {
+    console.error("SDXL API Error:", error);
+    throw new Error(error.response?.data?.error || "API request failed");
   }
 };
 
@@ -193,11 +280,14 @@ export const imageToImageAPI = async (
   requestData: ImageToImageRequest
 ): Promise<ImageToImageResponse> => {
   try {
-    const response = await api.post('/generative/image/imageToImage', requestData);
+    const response = await api.post(
+      "/generative/image/imageToImage",
+      requestData
+    );
     return response.data;
   } catch (error: any) {
-    console.error('ImageToImage API Error:', error);
-    throw new Error(error.response?.data?.error || 'API request failed');
+    console.error("ImageToImage API Error:", error);
+    throw new Error(error.response?.data?.error || "API request failed");
   }
 };
 
@@ -247,7 +337,9 @@ export const getMyImages = async (): Promise<IAllImageResponse> => {
 };
 
 // Get specific image by ID from backend
-export const getImageById = async (imageId: string): Promise<{
+export const getImageById = async (
+  imageId: string
+): Promise<{
   success: string;
   message: string;
   data: ImageItem;
@@ -266,7 +358,9 @@ export const getImageById = async (imageId: string): Promise<{
 };
 
 // Delete image by ID from backend
-export const deleteImageById = async (imageId: string): Promise<{
+export const deleteImageById = async (
+  imageId: string
+): Promise<{
   success: string;
   message: string;
   data: ImageItem;
