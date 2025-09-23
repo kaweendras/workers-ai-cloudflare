@@ -3,7 +3,7 @@ import User from "../models/userModel";
 
 const getAllUsers = async () => {
   try {
-    const users = await User.find({ role: "player" }).sort({ points: -1 });
+    const users = await User.find();
     return users;
   } catch (err) {
     console.error(err);
@@ -36,4 +36,14 @@ const addUser = async (userData: IUser) => {
   }
 };
 
-export { getAllUsers, findUserByEmail, addUser };
+const deleteUserByEmail = async (email: string) => {
+  try {
+    const result = await User.deleteOne({ email });
+    return result.deletedCount === 1;
+  } catch (err) {
+    console.error(err);
+    throw new Error("Failed to delete user from the database");
+  }
+};
+
+export { getAllUsers, findUserByEmail, addUser, deleteUserByEmail };
