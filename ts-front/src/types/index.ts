@@ -91,6 +91,7 @@ export interface UserResponse {
 
 export interface ImageItem {
   _id: string;
+  fileId: string;
   url: string;
   thumbnailUrl: string;
   prompt: string;
