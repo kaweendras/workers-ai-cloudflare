@@ -5,3 +5,4 @@ dist/
 Gradio-UI/.env
 tmp/
 ts-front/node_modules/
+/tests

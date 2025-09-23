@@ -24,6 +24,7 @@
     "typescript": "^5.9.2"
   },
   "dependencies": {
+    "@google/genai": "^1.20.0",
     "@types/jsonwebtoken": "^9.0.10",
     "axios": "^1.11.0",
     "bcrypt": "^6.0.0",
