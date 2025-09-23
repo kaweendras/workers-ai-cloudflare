@@ -122,7 +122,12 @@ export async function lucidOriginTTI(
       http, // base64 image data from Cloudflare API
       filename,
       "/generated-images", // folder in ImageKit
-      ["ai-generated", "lucid-origin", "text-to-image", sanitizedPrompt.substring(0, 20)] // tags
+      [
+        "ai-generated",
+        "lucid-origin",
+        "text-to-image",
+        sanitizedPrompt.substring(0, 20),
+      ] // tags
     );
 
     console.log(
@@ -131,7 +136,7 @@ export async function lucidOriginTTI(
 
     // Add image details to database with addImage function and IImage interface
     try {
-      if(email) {
+      if (email) {
         const imageData: Partial<IImage> = {
           url: uploadResult.url,
           thumbnailUrl: uploadResult.thumbnailUrl,
@@ -141,7 +146,7 @@ export async function lucidOriginTTI(
           width: width,
           steps: diffusionSteps,
           seed: seed,
-          userEmail: email
+          userEmail: email,
         };
         await addImage(imageData);
         console.log("Lucid Origin image data added to database:", imageData);
@@ -155,7 +160,7 @@ export async function lucidOriginTTI(
       url: uploadResult.url,
       thumbnailUrl: uploadResult.thumbnailUrl,
       fileName: uploadResult.name,
-      filePath: uploadResult.filePath
+      filePath: uploadResult.filePath,
     };
   } catch (error) {
     if (axios.isAxiosError(error)) {
