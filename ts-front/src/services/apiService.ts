@@ -362,6 +362,31 @@ export const getMyImages = async (): Promise<IAllImageResponse> => {
   }
 };
 
+// Get all images by user email (Admin only)
+export const getImagesByUserEmail = async (
+  email: string
+): Promise<IAllImageResponse> => {
+  try {
+    // Update headers with current token
+    const token = getAuthToken();
+    if (token) {
+      api.defaults.headers["authorization"] = `Bearer ${token}`;
+    }
+
+    const response = await api.get(
+      `/images/allimagesbyuseremail?email=${encodeURIComponent(email)}`
+    );
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(
+        `API Error: ${error.response?.data?.message || error.message}`
+      );
+    }
+    throw error;
+  }
+};
+
 // Get specific image by ID from backend
 export const getImageById = async (
   imageId: string

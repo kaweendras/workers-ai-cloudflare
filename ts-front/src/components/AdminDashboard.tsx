@@ -1,6 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { getAllUsers, createUser, deleteUser } from "../services/apiService";
-import type { User, CreateUserRequest } from "../types";
+import {
+  getAllUsers,
+  createUser,
+  deleteUser,
+  getImagesByUserEmail,
+  deleteImageById,
+} from "../services/apiService";
+import type {
+  User,
+  CreateUserRequest,
+  ImageItem,
+  IAllImageResponse,
+} from "../types";
 import { isAdmin } from "../utils/auth";
 
 const AdminDashboard: React.FC = () => {
@@ -11,6 +22,14 @@ const AdminDashboard: React.FC = () => {
   const [creating, setCreating] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null); // Track which user is being deleted
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null); // Track confirm dialog
+
+  // User images modal state
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [userImages, setUserImages] = useState<ImageItem[]>([]);
+  const [loadingImages, setLoadingImages] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<ImageItem | null>(null);
+  const [deletingImage, setDeletingImage] = useState<string | null>(null);
+
   const [newUser, setNewUser] = useState<CreateUserRequest>({
     name: "",
     email: "",
@@ -136,6 +155,70 @@ const AdminDashboard: React.FC = () => {
 
   const cancelDelete = () => {
     setDeleteConfirm(null);
+  };
+
+  const handleViewUserImages = async (user: User) => {
+    try {
+      setSelectedUser(user);
+      setLoadingImages(true);
+      setError(null);
+
+      const response = await getImagesByUserEmail(user.email);
+
+      if (response.success === "true" && Array.isArray(response.data)) {
+        setUserImages(response.data);
+      } else {
+        setUserImages([]);
+      }
+    } catch (err) {
+      console.error("Error fetching user images:", err);
+      setError(
+        err instanceof Error
+          ? err.message
+          : "An error occurred while fetching user images"
+      );
+      setUserImages([]);
+    } finally {
+      setLoadingImages(false);
+    }
+  };
+
+  const handleCloseImageModal = () => {
+    setSelectedUser(null);
+    setUserImages([]);
+    setSelectedImage(null);
+    setError(null);
+  };
+
+  const handleImageClick = (image: ImageItem) => {
+    setSelectedImage(image);
+  };
+
+  const handleDeleteImage = async (imageId: string) => {
+    try {
+      setDeletingImage(imageId);
+      setError(null);
+
+      const response = await deleteImageById(imageId);
+
+      if (response.success === "true") {
+        // Refresh user images
+        if (selectedUser) {
+          await handleViewUserImages(selectedUser);
+        }
+      } else {
+        throw new Error(response.message || "Failed to delete image");
+      }
+    } catch (err) {
+      console.error("Error deleting image:", err);
+      setError(
+        err instanceof Error
+          ? err.message
+          : "An error occurred while deleting image"
+      );
+    } finally {
+      setDeletingImage(null);
+    }
   };
 
   if (!isUserAdmin) {
@@ -377,9 +460,12 @@ const AdminDashboard: React.FC = () => {
                             <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-violet-500 rounded-full flex items-center justify-center text-white font-bold text-sm mr-3">
                               {user.name.charAt(0).toUpperCase()}
                             </div>
-                            <span className="text-white font-medium">
+                            <button
+                              onClick={() => handleViewUserImages(user)}
+                              className="text-white font-medium hover:text-purple-400 transition-colors duration-200 cursor-pointer"
+                            >
                               {user.name}
-                            </span>
+                            </button>
                           </div>
                         </td>
                         <td className="py-4 px-4 text-gray-300">
@@ -429,9 +515,12 @@ const AdminDashboard: React.FC = () => {
                           {user.name.charAt(0).toUpperCase()}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <h3 className="text-white font-medium text-sm truncate">
+                          <button
+                            onClick={() => handleViewUserImages(user)}
+                            className="text-white font-medium text-sm hover:text-purple-400 transition-colors duration-200 cursor-pointer truncate block w-full text-left"
+                          >
                             {user.name}
-                          </h3>
+                          </button>
                           <p className="text-gray-400 text-xs truncate">
                             {user.email}
                           </p>
@@ -469,6 +558,192 @@ const AdminDashboard: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* User Images Modal */}
+      {selectedUser && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-gray-900/95 backdrop-blur-lg border border-purple-500/30 rounded-xl w-full max-w-6xl max-h-[90vh] overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-700/50">
+              <div className="flex items-center">
+                <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-violet-500 rounded-full flex items-center justify-center text-white font-bold mr-3">
+                  {selectedUser.name.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white">
+                    {selectedUser.name}'s Images
+                  </h2>
+                  <p className="text-gray-400 text-sm">{selectedUser.email}</p>
+                </div>
+              </div>
+              <button
+                onClick={handleCloseImageModal}
+                className="text-gray-400 hover:text-white transition-colors duration-200 p-2"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+              {loadingImages ? (
+                <div className="text-center py-12">
+                  <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
+                  <p className="text-gray-300 mt-4">Loading images...</p>
+                </div>
+              ) : userImages.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="text-gray-400 text-6xl mb-4">🖼️</div>
+                  <p className="text-gray-300">No images found for this user</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {userImages.map((image) => (
+                    <div
+                      key={image._id}
+                      className="relative group bg-gray-800/30 rounded-xl overflow-hidden border border-gray-700/30 hover:border-purple-500/50 transition-all duration-300 transform hover:scale-105"
+                    >
+                      <div className="aspect-square relative">
+                        <img
+                          src={image.url}
+                          alt={image.prompt}
+                          className="w-full h-full object-cover cursor-pointer"
+                          onClick={() => handleImageClick(image)}
+                        />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300"></div>
+
+                        {/* Delete button */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteImage(image._id);
+                          }}
+                          disabled={deletingImage === image._id}
+                          className="absolute top-2 right-2 bg-red-600/80 hover:bg-red-700 disabled:bg-red-800 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-200 disabled:cursor-not-allowed"
+                        >
+                          {deletingImage === image._id ? (
+                            <svg
+                              className="animate-spin h-4 w-4"
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                            >
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                              ></circle>
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                              ></path>
+                            </svg>
+                          ) : (
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                              />
+                            </svg>
+                          )}
+                        </button>
+                      </div>
+
+                      {/* Image info */}
+                      <div className="p-4">
+                        <p className="text-gray-300 text-sm line-clamp-2 mb-2">
+                          {image.prompt}
+                        </p>
+                        <div className="flex items-center justify-between text-xs text-gray-400">
+                          <span>
+                            {new Date(image.createdAt).toLocaleDateString()}
+                          </span>
+                          <span className="px-2 py-1 bg-purple-600/20 text-purple-400 rounded">
+                            Generated
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Image Detail Modal */}
+      {selectedImage && (
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-60 flex items-center justify-center p-4">
+          <div className="relative max-w-4xl max-h-[90vh] w-full">
+            <button
+              onClick={() => setSelectedImage(null)}
+              className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors duration-200 p-2 bg-black/50 rounded-full z-10"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+
+            <div className="bg-gray-900/95 backdrop-blur-lg border border-purple-500/30 rounded-xl overflow-hidden">
+              <img
+                src={selectedImage.url}
+                alt={selectedImage.prompt}
+                className="w-full max-h-[60vh] object-contain"
+              />
+              <div className="p-6 border-t border-gray-700/50">
+                <h3 className="text-white font-semibold mb-2">Prompt</h3>
+                <p className="text-gray-300 mb-4">{selectedImage.prompt}</p>
+                <div className="flex flex-wrap gap-4 text-sm text-gray-400">
+                  <span>Generated Image</span>
+                  <span>
+                    Created:{" "}
+                    {new Date(selectedImage.createdAt).toLocaleString()}
+                  </span>
+                  {selectedImage.width && selectedImage.height && (
+                    <span>
+                      Dimensions: {selectedImage.width}x{selectedImage.height}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
