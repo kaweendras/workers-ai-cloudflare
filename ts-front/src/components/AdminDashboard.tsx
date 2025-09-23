@@ -222,7 +222,9 @@ const AdminDashboard: React.FC = () => {
         {/* Create User Section */}
         <div className="bg-black/20 backdrop-blur-sm border border-purple-500/30 rounded-xl p-4 sm:p-6 mb-4 sm:mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3 sm:gap-0">
-            <h2 className="text-lg sm:text-xl font-bold text-white">👥 User Management</h2>
+            <h2 className="text-lg sm:text-xl font-bold text-white">
+              👥 User Management
+            </h2>
             <button
               onClick={() => setShowCreateForm(!showCreateForm)}
               className="bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white px-4 py-2 rounded-lg transition-all duration-200 font-medium text-sm sm:text-base"
@@ -314,7 +316,9 @@ const AdminDashboard: React.FC = () => {
         {/* Users List */}
         <div className="bg-black/20 backdrop-blur-sm border border-purple-500/30 rounded-xl p-4 sm:p-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-3 sm:gap-0">
-            <h2 className="text-lg sm:text-xl font-bold text-white">📋 All Users</h2>
+            <h2 className="text-lg sm:text-xl font-bold text-white">
+              📋 All Users
+            </h2>
             <button
               onClick={fetchUsers}
               disabled={loading}
@@ -327,12 +331,16 @@ const AdminDashboard: React.FC = () => {
           {loading ? (
             <div className="text-center py-12">
               <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
-              <p className="text-gray-300 mt-4 text-sm sm:text-base">Loading users...</p>
+              <p className="text-gray-300 mt-4 text-sm sm:text-base">
+                Loading users...
+              </p>
             </div>
           ) : users.length === 0 ? (
             <div className="text-center py-12">
               <div className="text-gray-400 text-4xl sm:text-6xl mb-4">👥</div>
-              <p className="text-gray-300 text-sm sm:text-base">No users found</p>
+              <p className="text-gray-300 text-sm sm:text-base">
+                No users found
+              </p>
             </div>
           ) : (
             <>
@@ -374,7 +382,9 @@ const AdminDashboard: React.FC = () => {
                             </span>
                           </div>
                         </td>
-                        <td className="py-4 px-4 text-gray-300">{user.email}</td>
+                        <td className="py-4 px-4 text-gray-300">
+                          {user.email}
+                        </td>
                         <td className="py-4 px-4">
                           <span
                             className={`px-3 py-1 rounded-full text-xs font-medium ${
@@ -437,7 +447,7 @@ const AdminDashboard: React.FC = () => {
                         {user.role === "admin" ? "🛡️ Admin" : "👤 User"}
                       </span>
                     </div>
-                    
+
                     <div className="flex items-center justify-between">
                       <div className="text-gray-400 text-xs">
                         Created: {new Date(user.createdAt).toLocaleDateString()}
