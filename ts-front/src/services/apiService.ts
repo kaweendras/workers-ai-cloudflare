@@ -429,14 +429,14 @@ export const deleteImageById = async (
   }
 };
 
-// Delete an image by filename
-export const deleteImage = async (filename: string): Promise<boolean> => {
+// Delete an image by fileId
+export const deleteImage = async (fileId: string): Promise<any> => {
   try {
-    const response = await deletePhoto(filename);
-    return true;
+    const response = await deletePhoto(fileId);
+    return { success: "true" };
   } catch (error) {
     console.error("Error deleting image:", error);
-    return false;
+    return { success: "false" };
   }
 };
 
