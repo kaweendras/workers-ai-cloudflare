@@ -84,13 +84,24 @@ export interface [ModelName]ResponseInterface {
 ```typescript
 // Template for service implementation
 import axios from 'axios';
-import * as fs from 'fs';
-import * as path from 'path';
-import { [ModelName]RequestInterface, [ModelName]ResponseInterface } from '../../interfaces/[modelName]Interface';
+import { [ModelName]RequestInterface } from '../../interfaces/[modelName]Interface';
+import { uploadImageBase64 } from '../imagekitService';
+import { addImage } from '../imageServices';
+import { IImage } from '../../models/imageModel';
+
+// Standard interface for image generation services
+interface GeneratedImageResult {
+  fileId: string;
+  url: string;
+  thumbnailUrl: string;
+  fileName: string;
+  filePath: string;
+}
 
 export const [modelName]Service = async (
-  requestData: [ModelName]RequestInterface
-): Promise<[ModelName]ResponseInterface> => {
+  requestData: [ModelName]RequestInterface,
+  email?: string // Add email parameter for database storage
+): Promise<GeneratedImageResult> => {
   try {
     // 1. Validate input parameters
     if (!requestData.requiredParam) {
@@ -109,32 +120,63 @@ export const [modelName]Service = async (
     const response = await axios.post(apiUrl, requestData, { headers });
 
     // 4. Process response based on type
+    
+    // For image generation models - upload to ImageKit instead of local storage
+    if (response.data.result?.image || (response.data && Buffer.isBuffer(response.data))) {
+      let base64Image: string;
+      
+      if (response.data.result?.image) {
+        // Cloudflare API returns base64 in result.image
+        base64Image = response.data.result.image;
+      } else {
+        // Binary response data
+        base64Image = Buffer.from(response.data).toString('base64');
+      }
+      
+      // Generate filename
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const sanitizedPrompt = requestData.prompt || requestData.requiredParam || 'generated';
+      const cleanPrompt = sanitizedPrompt
+        .replace(/[^a-zA-Z0-9\s]/g, '')
+        .replace(/\s+/g, '-')
+        .substring(0, 50);
+      const fileName = `${timestamp}_${cleanPrompt}.png`;
+      
+      // Upload to ImageKit
+      const uploadResult = await uploadImageBase64(
+        base64Image,
+        fileName,
+        '/generated-images',
+        ['ai-generated', 'model-name', cleanPrompt.substring(0, 20)]
+      );
+      
+      // Store in database if email provided
+      if (requestData.email) {
+        const imageData: Partial<IImage> = {
+          url: uploadResult.url,
+          thumbnailUrl: uploadResult.thumbnailUrl,
+          prompt: requestData.prompt || requestData.requiredParam,
+          userEmail: requestData.email
+          // Add other model-specific parameters
+        };
+        await addImage(imageData);
+      }
+      
+      return {
+        fileId: uploadResult.fileId,
+        url: uploadResult.url,
+        thumbnailUrl: uploadResult.thumbnailUrl,
+        fileName: uploadResult.name,
+        filePath: uploadResult.filePath
+      };
+    }
+    
+    // For text/JSON responses
     if (response.data.result) {
-      // For text/JSON responses
       return {
         success: true,
         data: {
           result: response.data.result
-        }
-      };
-    }
-
-    // For binary/file responses (images, audio, etc.)
-    if (response.data.result && typeof response.data.result === 'string') {
-      // Assume base64 encoded file
-      const buffer = Buffer.from(response.data.result, 'base64');
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      const fileName = `${timestamp}_${requestData.requiredParam.replace(/\s+/g, '-')}.ext`;
-      const filePath = path.join(process.cwd(), 'images', fileName);
-      
-      fs.writeFileSync(filePath, buffer);
-      
-      return {
-        success: true,
-        data: {
-          result: response.data.result,
-          filePath,
-          fileName
         }
       };
     }
@@ -309,13 +351,22 @@ const [ModelName]: React.FC = () => {
       {state.result && (
         <Card>
           <h3 className="text-lg font-semibold mb-4">Result</h3>
-          {/* Customize based on result type */}
-          {state.result.filePath ? (
-            <img 
-              src={`http://localhost:4000/images/${state.result.fileName}`}
-              alt="Generated result"
-              className="max-w-full h-auto rounded-lg"
-            />
+          {/* Display results - images now come from ImageKit URLs */}
+          {state.result.url ? (
+            <div className="space-y-2">
+              <img 
+                src={state.result.url}
+                alt="Generated result"
+                className="max-w-full h-auto rounded-lg"
+              />
+              {state.result.thumbnailUrl && (
+                <p className="text-sm text-gray-500">
+                  <a href={state.result.url} target="_blank" rel="noopener noreferrer">
+                    View full size
+                  </a>
+                </p>
+              )}
+            </div>
           ) : (
             <pre className="bg-gray-100 p-4 rounded-lg overflow-auto">
               {JSON.stringify(state.result, null, 2)}
@@ -404,6 +455,26 @@ After implementation, verify:
 
 ## 🛠️ Common Patterns and Best Practices
 
+### Universal Output Format
+
+All image generation services now return a standardized `GeneratedImageResult` interface:
+
+```typescript
+interface GeneratedImageResult {
+  fileId: string;      // ImageKit file ID
+  url: string;         // Full resolution image URL
+  thumbnailUrl: string; // Thumbnail URL from ImageKit
+  fileName: string;    // Original filename
+  filePath: string;    // ImageKit file path
+}
+```
+
+This standardization allows for:
+- Consistent frontend handling across all image models
+- Unified database storage patterns
+- Easy integration with ImageKit's transformation features
+- Consistent error handling and user experience
+
 ### File Naming Conventions
 - **Services:** `camelCase` (e.g., `textToImageService`)
 - **Controllers:** `camelCase` + `Controller` (e.g., `textToImageController`)
@@ -430,12 +501,62 @@ try {
 }
 ```
 
-### File Storage Patterns
+### Image Upload and Storage Patterns
+
+The application now uses **ImageKit** for image storage instead of local file storage. All generated images are uploaded to ImageKit and their metadata is stored in the database.
+
 ```typescript
-// For generated files (images, audio, etc.)
+// Standard GeneratedImageResult interface used across all image services
+interface GeneratedImageResult {
+  fileId: string;
+  url: string;
+  thumbnailUrl: string;
+  fileName: string;
+  filePath: string;
+}
+
+// Upload generated image to ImageKit
+import { uploadImageBase64 } from '../imagekitService';
+import { addImage } from '../imageServices';
+import { IImage } from '../../models/imageModel';
+
+// Generate filename for ImageKit upload
 const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-const fileName = `${timestamp}_${sanitizedInput}.${extension}`;
-const filePath = path.join(process.cwd(), 'images', fileName);
+const sanitizedPrompt = prompt
+  .replace(/[^a-zA-Z0-9\s]/g, '') // Remove special characters
+  .replace(/\s+/g, '-') // Replace spaces with hyphens
+  .substring(0, 50); // Limit length
+
+const filename = `${timestamp}_${sanitizedPrompt}.png`;
+
+// Upload to ImageKit
+const uploadResult = await uploadImageBase64(
+  base64ImageData, // base64 image data from Cloudflare API
+  filename,
+  '/generated-images', // folder in ImageKit
+  ['ai-generated', 'model-specific-tag', sanitizedPrompt.substring(0, 20)] // tags
+);
+
+// Store image metadata in database
+if (email) {
+  const imageData: Partial<IImage> = {
+    url: uploadResult.url,
+    thumbnailUrl: uploadResult.thumbnailUrl,
+    prompt: prompt,
+    // Add other model-specific parameters as needed
+    userEmail: email
+  };
+  await addImage(imageData);
+}
+
+// Return standardized result
+return {
+  fileId: uploadResult.fileId,
+  url: uploadResult.url,
+  thumbnailUrl: uploadResult.thumbnailUrl,
+  fileName: uploadResult.name,
+  filePath: uploadResult.filePath
+};
 ```
 
 ## 📚 Reference Examples
