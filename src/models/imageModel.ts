@@ -1,6 +1,7 @@
 import mongoose, { Schema, Document } from "mongoose";
 
 export interface IImage extends Document {
+  fileId: string;
   url: string;
   thumbnailUrl: string;
   prompt: string;
@@ -14,6 +15,7 @@ export interface IImage extends Document {
 
 const imageschema: Schema = new Schema(
   {
+    fileId: { type: String, required: true },
     url: { type: String, required: true },
     thumbnailUrl: { type: String, required: true },
     prompt: { type: String, required: true },
