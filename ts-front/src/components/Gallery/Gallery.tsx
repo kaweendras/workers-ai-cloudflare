@@ -3,9 +3,10 @@ import { getAllImages, deleteImage } from "../../services/apiService";
 import Button from "../common/Button";
 import { notify } from "../../utils/helpers";
 import { FiRefreshCw, FiTrash2 } from "react-icons/fi";
+import type { ImageItem } from "../../types";
 
 const Gallery: React.FC = () => {
-  const [images, setImages] = useState<string[]>([]);
+  const [images, setImages] = useState<ImageItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
@@ -15,7 +16,7 @@ const Gallery: React.FC = () => {
     try {
       const imageList = await getAllImages();
       console.log("Fetched images front:", imageList);
-      setImages(imageList.data.map(item => item.url)); // Extract URL strings from ImageItem objects
+      setImages(imageList.data); // Store full ImageItem objects
     } catch (error) {
       notify.error("Failed to load images");
       console.error("Error fetching images:", error);
@@ -28,23 +29,15 @@ const Gallery: React.FC = () => {
     fetchImages();
   }, []);
 
-  const handleImageClick = (image: string) => {
-    setSelectedImage(image);
+  const handleImageClick = (image: ImageItem) => {
+    setSelectedImage(image.url);
   };
 
-  const handleDeleteImage = async (imageUrl: string) => {
-    // Extract the filename from the URL
-    const filename = imageUrl.split("/").pop();
-
-    if (!filename) {
-      notify.error("Could not determine the filename");
-      return;
-    }
-
-    setIsDeleting(filename);
+  const handleDeleteImage = async (image: ImageItem) => {
+    setIsDeleting(image.fileId);
     try {
-      const success = await deleteImage(filename);
-      if (success) {
+      const response = await deleteImage(image.fileId);
+      if (response.success === "true") {
         notify.success("Image deleted successfully");
         // Refresh the gallery
         fetchImages();
@@ -109,12 +102,12 @@ const Gallery: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           {images.map((image, index) => (
             <div
-              key={index}
+              key={image.fileId}
               className="overflow-hidden rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 relative group"
             >
               <img
-                src={image}
-                alt={`Generated image ${index + 1}`}
+                src={image.url}
+                alt={image.prompt || `Generated image ${index + 1}`}
                 className="w-full h-64 object-cover cursor-pointer"
                 onClick={() => handleImageClick(image)}
               />
@@ -130,11 +123,11 @@ const Gallery: React.FC = () => {
                       handleDeleteImage(image);
                     }
                   }}
-                  disabled={isDeleting === image.split("/").pop()}
+                  disabled={isDeleting === image.fileId}
                   className="bg-red-500 hover:bg-red-600 text-white rounded-full p-2 shadow-lg"
                   title="Delete image"
                 >
-                  {isDeleting === image.split("/").pop() ? (
+                  {isDeleting === image.fileId ? (
                     <div className="w-5 h-5 animate-spin rounded-full border-b-2 border-white"></div>
                   ) : (
                     <FiTrash2 size={16} />
