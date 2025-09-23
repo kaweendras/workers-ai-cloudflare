@@ -23,7 +23,11 @@ const openai = new OpenAI({
     "X-Title": "<YOUR_SITE_NAME>", // Optional. Site title for rankings on openrouter.ai.
   },
 });
-export async function nanaoBanana(prompt: string, imageURL: string, email?: string): Promise<GeneratedImageResult> {
+export async function nanaoBanana(
+  prompt: string,
+  imageURL: string,
+  email?: string
+): Promise<GeneratedImageResult> {
   try {
     const completion = await openai.chat.completions.create({
       model: "google/gemini-2.5-flash-image-preview:free",
@@ -48,7 +52,7 @@ export async function nanaoBanana(prompt: string, imageURL: string, email?: stri
 
     // Generate a unique filename
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-    
+
     // Extract base64 image from ImageCompletionInterface response
     const imageCompletion: ImageCompletionInterface = completion as any;
     const base64Image =
@@ -67,7 +71,7 @@ export async function nanaoBanana(prompt: string, imageURL: string, email?: stri
 
     // Generate filename and upload to ImageKit
     const filename = `${timestamp}_nanoBanana.png`;
-    
+
     // Create a simple prompt snippet for tagging
     const promptSnippet = prompt
       .replace(/[^a-zA-Z0-9\s]/g, "")
@@ -88,12 +92,13 @@ export async function nanaoBanana(prompt: string, imageURL: string, email?: stri
 
     // Add image details to database with addImage function and IImage interface
     try {
-      if(email) {
+      if (email) {
         const imageData: Partial<IImage> = {
+          fileId: uploadResult.fileId,
           url: uploadResult.url,
           thumbnailUrl: uploadResult.thumbnailUrl,
           prompt: prompt,
-          userEmail: email
+          userEmail: email,
         };
         await addImage(imageData);
         console.log("NanoBanana image data added to database:", imageData);
@@ -107,7 +112,7 @@ export async function nanaoBanana(prompt: string, imageURL: string, email?: stri
       url: uploadResult.url,
       thumbnailUrl: uploadResult.thumbnailUrl,
       fileName: uploadResult.name,
-      filePath: uploadResult.filePath
+      filePath: uploadResult.filePath,
     };
   } catch (error) {
     console.error("Error generating nanoBanana:", error);

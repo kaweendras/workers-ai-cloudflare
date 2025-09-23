@@ -6,8 +6,8 @@ import {
 } from "../../interfaces/textToImageInterface";
 import { uploadImageBase64 } from "../imagekitService";
 
-import {addImage} from "../imageServices";
-import {IImage} from "../../models/imageModel";
+import { addImage } from "../imageServices";
+import { IImage } from "../../models/imageModel";
 
 interface GeneratedImageResult {
   fileId: string;
@@ -97,13 +97,14 @@ export async function generateImage(
 
     //add image details to db with addImage function and IImage interface
     try {
-      if(email) {
+      if (email) {
         const imageData: Partial<IImage> = {
+          fileId: uploadResult.fileId,
           url: uploadResult.url,
           thumbnailUrl: uploadResult.thumbnailUrl,
           prompt: prompt,
           steps: steps,
-          userEmail: email
+          userEmail: email,
         };
         await addImage(imageData);
         console.log("Image data added to database:", imageData);
@@ -112,12 +113,12 @@ export async function generateImage(
       console.error("Error adding image to database:", error);
     }
 
-    return { 
+    return {
       fileId: uploadResult.fileId,
       url: uploadResult.url,
       thumbnailUrl: uploadResult.thumbnailUrl,
       fileName: uploadResult.name,
-      filePath: uploadResult.filePath
+      filePath: uploadResult.filePath,
     };
   } catch (error) {
     if (axios.isAxiosError(error)) {

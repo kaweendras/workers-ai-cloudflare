@@ -138,6 +138,7 @@ export async function lucidOriginTTI(
     try {
       if (email) {
         const imageData: Partial<IImage> = {
+          fileId: uploadResult.fileId,
           url: uploadResult.url,
           thumbnailUrl: uploadResult.thumbnailUrl,
           prompt: prompt,

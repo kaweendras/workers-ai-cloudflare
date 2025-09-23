@@ -228,7 +228,7 @@ export async function inpaintImage(
     const filename = `inpaint_${timestamp}_${sanitizedPrompt}.png`;
 
     // Convert buffer to base64 for ImageKit upload
-    const base64Image = imageBuffer.toString('base64');
+    const base64Image = imageBuffer.toString("base64");
 
     // Upload image to ImageKit using base64
     const uploadResult = await uploadImageBase64(
@@ -244,8 +244,9 @@ export async function inpaintImage(
 
     // Add image details to database with addImage function and IImage interface
     try {
-      if(email) {
+      if (email) {
         const imageData: Partial<IImage> = {
+          fileId: uploadResult.fileId,
           url: uploadResult.url,
           thumbnailUrl: uploadResult.thumbnailUrl,
           prompt: requestData.prompt,
@@ -253,7 +254,7 @@ export async function inpaintImage(
           height: requestData.height,
           width: requestData.width,
           steps: requestData.num_steps,
-          userEmail: email
+          userEmail: email,
         };
         await addImage(imageData);
         console.log("Inpainted image data added to database:", imageData);
@@ -262,12 +263,12 @@ export async function inpaintImage(
       console.error("Error adding inpainted image to database:", error);
     }
 
-    return { 
+    return {
       fileId: uploadResult.fileId,
       url: uploadResult.url,
       thumbnailUrl: uploadResult.thumbnailUrl,
       fileName: uploadResult.name,
-      filePath: uploadResult.filePath
+      filePath: uploadResult.filePath,
     };
   } catch (error) {
     if (axios.isAxiosError(error)) {
