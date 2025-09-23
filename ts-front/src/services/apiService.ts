@@ -161,6 +161,46 @@ export const sdxlAPI = async (
   }
 };
 
+// Image to Image generation
+interface ImageToImageRequest {
+  prompt: string;
+  negative_prompt?: string;
+  height?: number;
+  width?: number;
+  image?: number[];
+  image_b64?: string;
+  mask?: number[];
+  num_steps?: number;
+  strength?: number;
+  guidance?: number;
+  seed?: number;
+}
+
+interface ImageToImageResponse {
+  success: string;
+  message: string;
+  data?: {
+    fileId: string;
+    url: string;
+    thumbnailUrl: string;
+    fileName: string;
+    filePath: string;
+  };
+  error?: string;
+}
+
+export const imageToImageAPI = async (
+  requestData: ImageToImageRequest
+): Promise<ImageToImageResponse> => {
+  try {
+    const response = await api.post('/generative/image/imageToImage', requestData);
+    return response.data;
+  } catch (error: any) {
+    console.error('ImageToImage API Error:', error);
+    throw new Error(error.response?.data?.error || 'API request failed');
+  }
+};
+
 // Get all images
 export const getAllImages = async (): Promise<IAllImageResponse> => {
   try {
