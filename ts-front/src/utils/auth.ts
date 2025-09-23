@@ -14,8 +14,8 @@ interface LoginResponse {
   role: string;
 }
 
-const TOKEN_KEY = 'auth_token';
-const USER_KEY = 'auth_user';
+const TOKEN_KEY = "auth_token";
+const USER_KEY = "auth_user";
 
 /**
  * Set authentication token in localStorage
@@ -24,7 +24,7 @@ export const setAuthToken = (token: string): void => {
   try {
     localStorage.setItem(TOKEN_KEY, token);
   } catch (error) {
-    console.error('Error saving auth token:', error);
+    console.error("Error saving auth token:", error);
   }
 };
 
@@ -35,7 +35,7 @@ export const getAuthToken = (): string | null => {
   try {
     return localStorage.getItem(TOKEN_KEY);
   } catch (error) {
-    console.error('Error retrieving auth token:', error);
+    console.error("Error retrieving auth token:", error);
     return null;
   }
 };
@@ -47,7 +47,7 @@ export const removeAuthToken = (): void => {
   try {
     localStorage.removeItem(TOKEN_KEY);
   } catch (error) {
-    console.error('Error removing auth token:', error);
+    console.error("Error removing auth token:", error);
   }
 };
 
@@ -58,7 +58,7 @@ export const setUserData = (userData: Partial<AuthUser>): void => {
   try {
     localStorage.setItem(USER_KEY, JSON.stringify(userData));
   } catch (error) {
-    console.error('Error saving user data:', error);
+    console.error("Error saving user data:", error);
   }
 };
 
@@ -70,7 +70,7 @@ export const getUserData = (): Partial<AuthUser> | null => {
     const userData = localStorage.getItem(USER_KEY);
     return userData ? JSON.parse(userData) : null;
   } catch (error) {
-    console.error('Error retrieving user data:', error);
+    console.error("Error retrieving user data:", error);
     return null;
   }
 };
@@ -82,7 +82,7 @@ export const removeUserData = (): void => {
   try {
     localStorage.removeItem(USER_KEY);
   } catch (error) {
-    console.error('Error removing user data:', error);
+    console.error("Error removing user data:", error);
   }
 };
 
@@ -117,8 +117,16 @@ export const getUserRole = (): string | null => {
  * Check if user has admin role
  */
 export const isAdmin = (): boolean => {
-  const role = getUserRole();
-  return role === 'admin';
+  // Check both localStorage role and JWT token role for reliability
+  const localRole = getUserRole();
+  const tokenData = getUserFromToken();
+  const tokenRole = tokenData?.role;
+
+  // Debug logging
+  console.log("Admin check:", { localRole, tokenRole });
+
+  // User must be admin in both sources to be considered admin
+  return localRole === "admin" || tokenRole === "admin";
 };
 
 /**
@@ -134,17 +142,17 @@ export const logout = (): void => {
  */
 export const decodeToken = (token: string): any => {
   try {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
     const jsonPayload = decodeURIComponent(
       atob(base64)
-        .split('')
-        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-        .join('')
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
     );
     return JSON.parse(jsonPayload);
   } catch (error) {
-    console.error('Error decoding token:', error);
+    console.error("Error decoding token:", error);
     return null;
   }
 };
@@ -163,7 +171,7 @@ export const isTokenExpired = (token?: string): boolean => {
     const currentTime = Date.now() / 1000;
     return decoded.exp < currentTime;
   } catch (error) {
-    console.error('Error checking token expiration:', error);
+    console.error("Error checking token expiration:", error);
     return true;
   }
 };
@@ -174,7 +182,7 @@ export const isTokenExpired = (token?: string): boolean => {
 export const getUserFromToken = (): any => {
   const token = getAuthToken();
   if (!token) return null;
-  
+
   return decodeToken(token);
 };
 
