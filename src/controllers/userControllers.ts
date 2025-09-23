@@ -4,6 +4,7 @@ import {
   getAllUsers,
   loginUser,
   userProfiles,
+  deleteUserByEmail,
 } from "../services/userServices";
 
 import { verifyToken } from "../utils/authUtils";
@@ -197,10 +198,64 @@ const getUserByEmailController = async (
   }
 };
 
+const deleteUserByEmailController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) {
+    return res.status(401).json({
+      success: "false",
+      message: "No token provided",
+    });
+  }
+
+  const { valid, decoded, error } = verifyToken(token);
+  if (!valid) {
+    return res.status(401).json({
+      success: "false",
+      message: "Invalid token",
+      error,
+    });
+  }
+
+  const role = (decoded as any).role;
+
+  if (role !== "admin") {
+    return res.status(403).json({
+      success: "false",
+      message: "Forbidden: Insufficient permissions",
+    });
+  }
+
+  const email = req.query.email as string;
+  try {
+    const deleted = await deleteUserByEmail(email);
+    if (!deleted) {
+      return res.status(500).json({
+        success: "false",
+        message: "Failed to delete user",
+      });
+    }
+    return res.status(200).json({
+      success: "true",
+      message: "User deleted successfully",
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      success: "false",
+      message: "Failed to delete user",
+    });
+  }
+};
+
 export {
   createUsersController,
   getAllUsersController,
   loginUserController,
   getProfileController,
   getUserByEmailController,
+  deleteUserByEmailController,
 };
