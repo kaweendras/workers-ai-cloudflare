@@ -54,7 +54,7 @@ router.get(
  * Delete user by email (admin only)
  */
 router.delete(
-  "/users/deleteUserByEmail",
+  "/users/deleteuser",
   adminMiddleware,
   userController.deleteUserByEmailController
 );
