@@ -156,6 +156,32 @@ export const getUserProfile = async (): Promise<UserResponse> => {
   }
 };
 
+export const deleteUser = async (email: string): Promise<UserResponse> => {
+  try {
+    // Update headers with current token
+    const token = getAuthToken();
+    if (token) {
+      api.defaults.headers["authorization"] = `Bearer ${token}`;
+    }
+
+    const response = await api.delete(`/users/deleteuser`, {
+      data: { email },
+    });
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(
+        `Failed to delete user: ${
+          error.response?.data?.message ||
+          error.response?.data?.error ||
+          error.message
+        }`
+      );
+    }
+    throw error;
+  }
+};
+
 // Text to image generation
 export const generateImage = async (
   params: ImageGenerationRequest
