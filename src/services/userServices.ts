@@ -111,4 +111,20 @@ const userProfiles = async (email: string) => {
   }
 };
 
-export { createUser, getAllUsers, loginUser, userProfiles };
+const deleteUserByEmail = async (email: string) => {
+  try {
+    const deleted = await userRepository.deleteUserByEmail(email);
+    if (deleted) {
+      console.log(`User deleted successfully: ${email}`);
+      return { success: "true", message: "User deleted successfully" };
+    } else {
+      console.log(`User not found for deletion: ${email}`);
+      return { success: "false", message: "User not found" };
+    }
+  } catch (err) {
+    console.error(`Failed to delete user: ${err}`);
+    return { success: "false", message: "Failed to delete user" };
+  }
+};
+
+export { createUser, getAllUsers, loginUser, userProfiles, deleteUserByEmail };
