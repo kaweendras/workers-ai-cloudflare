@@ -4,7 +4,7 @@ import {
   createUser,
   deleteUser,
   getImagesByUserEmail,
-  deleteImageById,
+  deleteImage,
 } from "../services/apiService";
 import type {
   User,
@@ -199,7 +199,7 @@ const AdminDashboard: React.FC = () => {
       setDeletingImage(imageId);
       setError(null);
 
-      const response = await deleteImageById(imageId);
+      const response = await deleteImage(imageId);
 
       if (response.success === "true") {
         // Refresh user images
