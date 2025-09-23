@@ -6,6 +6,8 @@ import { nanaoBanana } from "../services/generativeServices/nanoBanana";
 import { lucidOriginTTI } from "../services/generativeServices/lucidOriginTTI";
 import { sdxlService } from "../services/generativeServices/sdxlService";
 import { SdxlRequestInterface } from "../interfaces/sdxlInterface";
+import { imageToImageService } from "../services/generativeServices/imageToImageService";
+import { ImageToImageRequestInterface } from "../interfaces/imageToImageInterface";
 import * as path from "path";
 import * as fs from "fs";
 
@@ -241,6 +243,33 @@ const sdxlController = async (
   }
 };
 
+const imageToImageController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const requestData: ImageToImageRequestInterface = req.body;
+    const email = decodedEmail(req) as string;
+    
+    const result = await imageToImageService(requestData, email);
+    
+    res.status(200).json({
+      success: "true",
+      message: "Image generated successfully",
+      data: result
+    });
+  } catch (error: any) {
+    console.error('ImageToImage Controller Error:', error.message);
+    res.status(500).json({
+      success: "false",
+      message: "Failed to generate image",
+      error: error.message,
+      data: []
+    });
+  }
+};
+
 
 
 //// manipulations
@@ -369,4 +398,5 @@ export {
   deleteImageController,
   lucidOriginTTIController,
   sdxlController,
+  imageToImageController,
 };
