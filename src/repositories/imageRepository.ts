@@ -12,6 +12,7 @@ const getAllImages = async () => {
 };
 
 const getImagesByEmail = async (userEmail: string) => {
+  console.log(`Fetching images for userEmail: ${userEmail}`);
   try {
     const images = await Image.find({ userEmail }).sort({ createdAt: -1 });
     return images;
@@ -67,11 +68,11 @@ const getImageById = async (imageId: string) => {
   }
 };
 
-export { 
-  getAllImages, 
-  getImagesByEmail, 
-  addImage, 
-  deleteImage, 
+export {
+  getAllImages,
+  getImagesByEmail,
+  addImage,
+  deleteImage,
   deleteImagesByEmail,
-  getImageById 
+  getImageById,
 };
