@@ -67,6 +67,28 @@ export interface AuthUser {
   token: string;
 }
 
+export interface User {
+  _id: string;
+  name: string;
+  email: string;
+  role: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateUserRequest {
+  name: string;
+  email: string;
+  password: string;
+  role: string;
+}
+
+export interface UserResponse {
+  success: string;
+  message?: string;
+  data?: User | User[];
+}
+
 export interface ImageItem {
   _id: string;
   url: string;
