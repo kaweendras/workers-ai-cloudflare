@@ -35,9 +35,9 @@ const addImage = async (imageData: IImage) => {
   }
 };
 
-const deleteImage = async (imageId: string) => {
+const deleteImage = async (fileId: string) => {
   try {
-    const deletedImage = await Image.findByIdAndDelete(imageId);
+    const deletedImage = await Image.findOneAndDelete({ fileId });
     if (!deletedImage) {
       throw new Error("Image not found");
     }
@@ -68,6 +68,16 @@ const getImageById = async (imageId: string) => {
   }
 };
 
+const getImageByFileId = async (fileId: string) => {
+  try {
+    const image = await Image.findOne({ fileId });
+    return image;
+  } catch (err) {
+    console.error(err);
+    throw new Error("Failed to fetch image by fileId from the database");
+  }
+};
+
 export {
   getAllImages,
   getImagesByEmail,
@@ -75,4 +85,5 @@ export {
   deleteImage,
   deleteImagesByEmail,
   getImageById,
+  getImageByFileId,
 };
