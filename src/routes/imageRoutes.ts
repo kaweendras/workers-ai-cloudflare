@@ -34,6 +34,16 @@ router.get(
 );
 
 /**
+ * DELETE api/v1/delete/images/delete
+ * Delete image by ID (owner or admin only)
+ */
+router.delete(
+  "/delete/images/:fileId",
+  authMiddleware,
+  imageController.deleteImageController
+);
+
+/**
  * GET api/v1/images/:imageId
  * Get image by ID (owner or admin only)
  */
@@ -41,16 +51,6 @@ router.get(
   "/images/:imageId",
   authMiddleware,
   imageController.getImageByIdController
-);
-
-/**
- * DELETE api/v1/images/:imageId
- * Delete image by ID (owner or admin only)
- */
-router.delete(
-  "/images/:imageId",
-  authMiddleware,
-  imageController.deleteImageController
 );
 
 export default router;
