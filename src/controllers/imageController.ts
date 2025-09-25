@@ -266,12 +266,13 @@ const deleteImageController = async (
   next: NextFunction
 ) => {
   try {
-    const { imageId } = req.params;
+    const { fileId } = req.params;
+    console.log(`Request to delete image with fileId: ${fileId}`);
 
-    if (!imageId) {
+    if (!fileId) {
       return res.status(400).json({
         success: "false",
-        message: "Image ID is required",
+        message: "File ID is required",
         data: [],
       });
     }
@@ -287,7 +288,7 @@ const deleteImageController = async (
     }
 
     // First, get the image to check ownership
-    const imageResult = await imageServices.getImageById(imageId);
+    const imageResult = await imageServices.getImageByFileId(fileId);
 
     if (imageResult.success !== "true" || !imageResult.data) {
       return res.status(404).json({
@@ -310,7 +311,7 @@ const deleteImageController = async (
       });
     }
 
-    const result = await imageServices.deleteImage(imageId);
+    const result = await imageServices.deleteImage(fileId);
 
     if (result.success === "true") {
       return res.status(200).json({
