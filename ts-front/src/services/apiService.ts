@@ -417,7 +417,7 @@ export const deleteImageById = async (
   data: ImageItem;
 }> => {
   try {
-    const response = await api.delete(`/images/${imageId}`);
+    const response = await api.delete(`/delete/images/${imageId}`);
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -433,6 +433,13 @@ export const deleteImageById = async (
 export const deleteImage = async (fileId: string): Promise<any> => {
   try {
     const response = await deletePhoto(fileId);
+    console.log("Image deleted successfully:", response);
+    const dbDeleteRes = await deleteImageById(fileId);
+    if (dbDeleteRes.success !== "true") {
+      console.error("Failed to delete image record from DB:", dbDeleteRes);
+      return { success: "false" };
+    }
+    console.log("Image record deleted from DB:", dbDeleteRes);
     return { success: "true" };
   } catch (error) {
     console.error("Error deleting image:", error);
