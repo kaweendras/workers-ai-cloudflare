@@ -37,15 +37,29 @@ const getImageById = async (imageId: string) => {
   }
 };
 
+// Get image by fileID
+const getImageByFileId = async (fileId: string) => {
+  try {
+    const image = await imageRepository.getImageByFileId(fileId);
+    if (!image) {
+      return { success: "false", message: "Image not found" };
+    }
+    return { success: "true", data: image };
+  } catch (err) {
+    console.error(err);
+    return { success: "false", message: "Failed to get image by ID" };
+  }
+};
+
 // Add new image
 const addImage = async (imageData: Partial<IImage>) => {
   try {
     const image = await imageRepository.addImage(imageData as IImage);
     console.log(`Image added successfully with ID: ${image._id}`);
-    return { 
-      success: "true", 
-      data: image, 
-      message: "Image added successfully" 
+    return {
+      success: "true",
+      data: image,
+      message: "Image added successfully",
     };
   } catch (err) {
     console.error(`Failed to add image: ${err}`);
@@ -54,14 +68,14 @@ const addImage = async (imageData: Partial<IImage>) => {
 };
 
 // Delete image by ID
-const deleteImage = async (imageId: string) => {
+const deleteImage = async (fileId: string) => {
   try {
-    const deletedImage = await imageRepository.deleteImage(imageId);
-    console.log(`Image deleted successfully with ID: ${imageId}`);
-    return { 
-      success: "true", 
-      data: deletedImage, 
-      message: "Image deleted successfully" 
+    const deletedImage = await imageRepository.deleteImage(fileId);
+    console.log(`Image deleted successfully with ID: ${fileId}`);
+    return {
+      success: "true",
+      data: deletedImage,
+      message: "Image deleted successfully",
     };
   } catch (err) {
     console.error(`Failed to delete image: ${err}`);
@@ -74,10 +88,10 @@ const deleteImagesByEmail = async (userEmail: string) => {
   try {
     const result = await imageRepository.deleteImagesByEmail(userEmail);
     console.log(`Deleted ${result.deletedCount} images for user: ${userEmail}`);
-    return { 
-      success: "true", 
-      data: result, 
-      message: `Deleted ${result.deletedCount} images successfully` 
+    return {
+      success: "true",
+      data: result,
+      message: `Deleted ${result.deletedCount} images successfully`,
     };
   } catch (err) {
     console.error(`Failed to delete images by email: ${err}`);
@@ -90,12 +104,15 @@ const getImageStatsByEmail = async (userEmail: string) => {
   try {
     const images = await imageRepository.getImagesByEmail(userEmail);
     const totalImages = images.length;
-    const averageSteps = images.length > 0 
-      ? images.reduce((sum, img) => sum + (img.steps || 0), 0) / images.length 
-      : 0;
-    const averageGuidance = images.length > 0 
-      ? images.reduce((sum, img) => sum + (img.guidance || 0), 0) / images.length 
-      : 0;
+    const averageSteps =
+      images.length > 0
+        ? images.reduce((sum, img) => sum + (img.steps || 0), 0) / images.length
+        : 0;
+    const averageGuidance =
+      images.length > 0
+        ? images.reduce((sum, img) => sum + (img.guidance || 0), 0) /
+          images.length
+        : 0;
 
     return {
       success: "true",
@@ -103,8 +120,8 @@ const getImageStatsByEmail = async (userEmail: string) => {
         totalImages,
         averageSteps: Math.round(averageSteps * 100) / 100,
         averageGuidance: Math.round(averageGuidance * 100) / 100,
-        userEmail
-      }
+        userEmail,
+      },
     };
   } catch (err) {
     console.error(`Failed to get image statistics: ${err}`);
@@ -119,5 +136,6 @@ export {
   addImage,
   deleteImage,
   deleteImagesByEmail,
-  getImageStatsByEmail
+  getImageStatsByEmail,
+  getImageByFileId,
 };
